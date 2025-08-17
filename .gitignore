@@ -1,3 +1,4 @@
+# haskell git ignore
 dist
 dist-*
 cabal-dev
@@ -21,3 +22,10 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+
+# binja git ignore
+*.bndb
+*.elf
+*.so
+*.dylib
+
