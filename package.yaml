@@ -1,0 +1,36 @@
+name: binaryninja-haskell
+version: 0.1
+synopsis: Bindings for binaryninja api
+description: Bindings for binaryninja api
+category: FFI
+license: MIT
+author: Logan Leland
+maintainer: logan@leland.zip
+extra-source-files:
+- README.md
+dependencies:
+- base >= 4.7 && < 5
+- bytestring
+- base64-bytestring
+- text
+- async >= 2.2.5
+
+executables:
+  binaryninja-demo:
+    main: Main.hs
+    source-dirs: src
+    ghc-options:
+      - -Wall
+      - -threaded
+    ld-options:
+      - -Wl,-rpath,./lib # for macOS
+      - -Wl,-rpath,. # for macOS
+    c-sources:
+      - cbits/wrapper.c
+    include-dirs:
+      - cbits
+    extra-libraries:
+      - binaryninjacore
+    extra-lib-dirs:
+      - ./lib
+tests: {}
