@@ -13,7 +13,6 @@ dependencies:
 - bytestring
 - base64-bytestring
 - text
-- async >= 2.2.5
 
 executables:
   binaryninja-demo:
