@@ -22,7 +22,7 @@ foreign import ccall "BNGetSymbolType"
 ty :: BNSymbolPtr -> IO SymbolType
 ty sym = do
   symTy <- c_BNGetSymbolType sym
-  return $ intToSymbolType symTy
+  return $ toEnum $ fromIntegral symTy
 
 foreign import ccall "BNGetSymbolBinding"
   c_BNGetSymbolBinding :: BNSymbolPtr -> IO CInt
@@ -30,7 +30,7 @@ foreign import ccall "BNGetSymbolBinding"
 binding :: BNSymbolPtr -> IO SymbolBinding
 binding sym = do
   symBinding <- c_BNGetSymbolBinding sym
-  return $ intToSymbolBinding symBinding
+  return $ toEnum $ fromIntegral symBinding
 
 foreign import ccall "BNGetSymbolRawName"
   c_BNGetSymbolRawName :: BNSymbolPtr -> IO CString

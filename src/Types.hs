@@ -7,6 +7,7 @@ module Types
   , Word8
   , Word32
   , Word64
+  , Int64
   , CChar
   , Ptr
   , FunPtr
@@ -17,11 +18,18 @@ module Types
   , newCString
   , peekCString
   , GHC.ForeignPtr.ForeignPtr
+  , (.&.)
+  , castWord32ToFloat 
+  , castWord64ToDouble
+  , float2Double 
   , newForeignPtr 
   , pointerSize
   , peek
+  , alloca
+  , castPtr
   , poke
   , peekArray
+  , when
   , BNBinaryView
   , BNBinaryViewPtr
   , BNProgressFunction
@@ -47,24 +55,22 @@ module Types
   , SymbolList(..)
   , SymbolType(..)
   , SymbolBinding(..)
-  , intToSymbolType
-  , symbolTypeToInt 
-  , intToSymbolBinding
-  , symbolBindingToInt
-  , stringTypeToInt 
-  , intToStringType
   , Types.alignment
   ) where
 
 
-import Foreign (peek, Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment))
+import Foreign (alloca, peek, castPtr, Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment))
 import Data.Word (Word8, Word32, Word64)
+import Data.Bits ((.&.))
+import Data.Int (Int64)
 import Foreign.Ptr (Ptr, nullFunPtr, nullPtr, FunPtr)
 import Foreign.Concurrent (newForeignPtr)
 import Foreign.C.String (CString, withCString, newCString, peekCString)
 import Foreign.C.Types (CSize(..), CBool(..), CChar, CInt(..), CUInt(..), CULLong(..))
 import Foreign.Marshal.Array (peekArray)
 import GHC.ForeignPtr (ForeignPtr)
+import GHC.Float (float2Double, castWord32ToFloat, castWord64ToDouble, float2Double)
+import Control.Monad (when)
 
 
 pointerSize :: Int
@@ -125,12 +131,12 @@ instance Storable BNStringRef where
   sizeOf _ = 24
   alignment _ = Types.alignment
   peek ptr = do
-    t  <- intToStringType <$> (peekByteOff ptr 0 :: IO CInt)
+    t  <- toEnum . fromIntegral <$> (peekByteOff ptr 0 :: IO CInt)
     s  <- peekByteOff ptr 8  :: IO Word64
     l  <- peekByteOff ptr 16 :: IO CSize
     return (BNStringRef t s l)
   poke ptr (BNStringRef t s l) = do
-    pokeByteOff ptr 0 $ stringTypeToInt t
+    pokeByteOff ptr 0 $ fromEnum t
     pokeByteOff ptr 8 s
     pokeByteOff ptr 16 l
 
@@ -156,15 +162,15 @@ data SymbolList = SymbolList
 data SymbolType = FunctionSymbol | ImportAddressSymbol | ImportedFunctionSymbol |
                   DataSymbol | ImportedDataSymbol | ExternalSymbol |
                   LibraryFunctionSymbol | SymbolicFunctionSymbol | LocalLabelSymbol
-  deriving (Eq, Show)
+  deriving (Eq, Show, Enum)
 
 
 data SymbolBinding = NoBinding | LocalBinding | GlobalBinding | WeakBinding
-  deriving (Eq, Show)
+  deriving (Eq, Show, Enum)
 
 
 data BNStringType = AsciiString | Utf16String | Utf32String | Utf8String
-  deriving (Eq, Show)
+  deriving (Eq, Show, Enum)
 
 
 data BNLowLevelILInstruction = BNLowLevelILInstruction
@@ -257,51 +263,4 @@ instance Storable BNMediumLevelILInstruction where
     pokeByteOff ptr 48 o3
     pokeByteOff ptr 56 o4
     pokeByteOff ptr 64 addr
-
-
-stringTypeToInt :: BNStringType -> CInt
-stringTypeToInt AsciiString = 0
-stringTypeToInt Utf16String = 1
-stringTypeToInt Utf32String = 2
-stringTypeToInt Utf8String = 3
-
-intToStringType :: CInt -> BNStringType
-intToStringType 0 = AsciiString
-intToStringType 1 = Utf16String
-intToStringType 2 = Utf32String
-intToStringType 3 = Utf8String
-
-symbolTypeToInt :: SymbolType -> CInt
-symbolTypeToInt FunctionSymbol = 0
-symbolTypeToInt ImportAddressSymbol = 1
-symbolTypeToInt ImportedFunctionSymbol = 2
-symbolTypeToInt DataSymbol = 3
-symbolTypeToInt ImportedDataSymbol = 4
-symbolTypeToInt ExternalSymbol = 5
-symbolTypeToInt LibraryFunctionSymbol = 6
-symbolTypeToInt SymbolicFunctionSymbol = 7
-symbolTypeToInt LocalLabelSymbol = 8
-
-intToSymbolType :: CInt -> SymbolType
-intToSymbolType 0 = FunctionSymbol
-intToSymbolType 1 = ImportAddressSymbol
-intToSymbolType 2 = ImportedFunctionSymbol
-intToSymbolType 3 = DataSymbol
-intToSymbolType 4 = ImportedDataSymbol
-intToSymbolType 5 = ExternalSymbol
-intToSymbolType 6 = LibraryFunctionSymbol
-intToSymbolType 7 = SymbolicFunctionSymbol
-intToSymbolType 8 = LocalLabelSymbol
-
-symbolBindingToInt :: SymbolBinding -> CInt
-symbolBindingToInt NoBinding = 0
-symbolBindingToInt LocalBinding = 1
-symbolBindingToInt GlobalBinding = 2
-symbolBindingToInt WeakBinding = 3
-
-intToSymbolBinding :: CInt -> SymbolBinding
-intToSymbolBinding 0 = NoBinding
-intToSymbolBinding 1 = LocalBinding
-intToSymbolBinding 2 = GlobalBinding
-intToSymbolBinding 3 = WeakBinding
 

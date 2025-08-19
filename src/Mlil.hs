@@ -5,6 +5,7 @@ module Mlil
 import Types
 import ReferenceSource
 import Function
+import GHC.Float (float2Double)
 
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
@@ -65,4 +66,77 @@ fromRef ref = do
         Just sIndex' -> do
           exprIndex <- instIndexToExprIndex func' (fromIntegral sIndex')
           mlilByIndex func' exprIndex
+
+
+foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
+  c_BNMediumLevelILFreeOperandList
+    :: Ptr CULLong -> IO ()
+
+
+-- assume (delete after check): return is list of expression index to recover list of mlil instructions
+foreign import ccall unsafe "BNMediumLevelILGetOperandList"
+  c_BNMediumLevelILGetOperandList
+    :: BNMlilFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
+
+
+getExprList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getExprList func expr operand =
+  alloca $ \countPtr -> do
+    rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
+    count  <- fromIntegral <$> peek countPtr
+    xs <- if rawPtr == nullPtr || count == 0
+      then return []
+      else peekArray count rawPtr
+    when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
+    mapM (mlilByIndex func . fromIntegral ) xs
+
+
+getExpr :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+getExpr = mlilByIndex 
+
+getInt :: BNMediumLevelILInstruction -> Int -> Int
+getInt inst index =
+  fromIntegral (fromIntegral value :: Int64)
+  where
+  value = case index of
+          0 -> mlOp0 inst
+          1 -> mlOp1 inst
+          2 -> mlOp2 inst
+          3 -> mlOp3 inst
+          4 -> mlOp4 inst
+
+
+-- TODO; derive Variables over the list
+getVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getVarList = getExprList 
+
+-- TODO; derive Variable from expression index this function
+-- currently returns
+getVar :: BNMediumLevelILInstruction -> Int -> CULLong
+getVar inst index = value
+  where
+  value = case index of
+          0 -> mlOp0 inst
+          1 -> mlOp1 inst
+          2 -> mlOp2 inst
+          3 -> mlOp3 inst
+          4 -> mlOp4 inst
+
+
+getFloat :: BNMediumLevelILInstruction -> Int -> Double
+getFloat inst index =
+  case mlSize inst of
+    4 -> float2Double $ castWord32ToFloat w32
+    8 -> castWord64ToDouble w64
+    _ -> fromIntegral value
+  where
+    w64 = fromIntegral value :: Word64
+    w32 = fromIntegral $ w64 .&. 0xffffffff :: Word32
+    value = case index of
+            0 -> mlOp0 inst
+            1 -> mlOp1 inst
+            2 -> mlOp2 inst
+            3 -> mlOp3 inst
+            4 -> mlOp4 inst
+
 

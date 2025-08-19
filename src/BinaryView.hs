@@ -16,7 +16,6 @@ module BinaryView
   , BinaryView.read
   ) where
 
-import Foreign (alloca, peek, Storable (peek), castPtr)
 import Plugin
 import Utils
 import Types
@@ -146,7 +145,9 @@ getFunctionList view =
   alloca $ \countPtr -> do
     rawPtr <- c_BNGetAnalysisFunctionList view countPtr
     count  <- fromIntegral <$> peek countPtr
-    xs <- if rawPtr == nullPtr || count == 0 then return [] else peekArray count rawPtr
+    xs <- if rawPtr == nullPtr || count == 0
+      then return []
+      else peekArray count rawPtr
     arrPtr <- newForeignPtr rawPtr (c_BNFreeFunctionList rawPtr (fromIntegral count))
     pure FunctionList
           { flArrayPtr=arrPtr,
@@ -177,7 +178,9 @@ getSymbolList view =
   alloca $ \countPtr -> do
     rawPtr <- c_BNGetSymbols view countPtr nullPtr 
     count  <- fromIntegral <$> peek countPtr
-    xs <- if rawPtr == nullPtr || count == 0 then return [] else peekArray count rawPtr
+    xs <- if rawPtr == nullPtr || count == 0
+      then return []
+      else peekArray count rawPtr
     arrPtr <- newForeignPtr rawPtr (c_BNFreeSymbolList rawPtr (fromIntegral count))
     pure SymbolList
           { slArrayPtr=arrPtr,
@@ -235,7 +238,7 @@ strings view =
         c_BNFreeStringReferenceList arrPtr
         forM refs $ \(BNStringRef t s l) -> do
           mbs <- BinaryView.read view s l
-          pure $ fmap (T.unpack . decodeByType t) mbs
+          return $ fmap (T.unpack . decodeByType t) mbs
 
 
 decodeByType :: BNStringType -> BS.ByteString -> T.Text
