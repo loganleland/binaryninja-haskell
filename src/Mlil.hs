@@ -148,6 +148,19 @@ getVar inst index = varFromID value
           4 -> mlOp4 inst
 
 
+getSSAVar :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
+getSSAVar inst indexVar indexVersion = do
+  rawVar <- getVar inst indexVar
+  return $ BNSSAVariable rawVar version
+  where
+    version = fromIntegral $ case indexVersion of
+                             0 -> mlOp0 inst
+                             1 -> mlOp1 inst
+                             2 -> mlOp2 inst
+                             3 -> mlOp3 inst
+                             4 -> mlOp4 inst
+
+
 getFloat :: BNMediumLevelILInstruction -> Int -> Double
 getFloat inst index =
   case mlSize inst of
