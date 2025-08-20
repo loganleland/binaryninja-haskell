@@ -21,9 +21,11 @@ foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
   c_BNGetMediumLevelILIndexForInstruction
     :: BNMlilFunctionPtr -> Word64 -> IO CSize
 
+
 foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
   c_BNGetMediumLevelILByIndexPtr
     :: BNMlilFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
+
 
 startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO (Maybe CSize)
 startIndex func arch addr = do
@@ -37,7 +39,6 @@ startIndex func arch addr = do
     if start >= count
     then return Nothing
     else return $ Just start
-
 
 
 -- Convert an instruction index into an expression index
@@ -94,6 +95,7 @@ getExprList func expr operand =
 getExpr :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
 getExpr = mlilByIndex 
 
+
 getInt :: BNMediumLevelILInstruction -> Int -> Int
 getInt inst index =
   fromIntegral (fromIntegral value :: Int64)
@@ -106,14 +108,37 @@ getInt inst index =
           4 -> mlOp4 inst
 
 
--- TODO; derive Variables over the list
-getVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
-getVarList = getExprList 
+foreign import ccall unsafe "BNFromVariableIdentifierPtr"
+  c_BNFromVariableIdentifierPtr
+    :: CULLong -> IO (Ptr BNVariable)
 
--- TODO; derive Variable from expression index this function
--- currently returns
-getVar :: BNMediumLevelILInstruction -> Int -> CULLong
-getVar inst index = value
+foreign import ccall unsafe "freeBNVariable"
+  c_freeBNVariable
+    :: Ptr BNVariable -> IO ()
+
+
+varFromID :: CULLong -> IO BNVariable
+varFromID index = do
+  rawPtr <- c_BNFromVariableIdentifierPtr index
+  val <- peek rawPtr
+  c_freeBNVariable rawPtr
+  return val
+
+
+getVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [BNVariable]
+getVarList func expr operand =
+  alloca $ \countPtr -> do
+    rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
+    count  <- fromIntegral <$> peek countPtr
+    xs <- if rawPtr == nullPtr || count == 0
+      then return []
+      else peekArray count rawPtr
+    when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
+    mapM varFromID xs
+
+ 
+getVar :: BNMediumLevelILInstruction -> Int -> IO BNVariable
+getVar inst index = varFromID value
   where
   value = case index of
           0 -> mlOp0 inst
@@ -138,5 +163,34 @@ getFloat inst index =
             2 -> mlOp2 inst
             3 -> mlOp3 inst
             4 -> mlOp4 inst
+
+
+foreign import ccall unsafe "BNGetConstantData"
+  c_BNGetConstantData
+    :: BNFunctionPtr
+    -> CULLong
+    -> CULLong
+    -> CSize
+    -> Ptr CInt
+    -> IO BNDataBufferPtr
+
+
+getConstantData :: BNFunctionPtr -> BNMediumLevelILInstruction -> Int -> Int -> IO BNDataBufferPtr
+getConstantData func inst op1 op2 =
+  c_BNGetConstantData func state value (mlSize inst) nullPtr 
+  where
+    state = case op1 of
+      0 -> mlOp0 inst
+      1 -> mlOp1 inst
+      2 -> mlOp2 inst
+      3 -> mlOp3 inst
+      4 -> mlOp4 inst
+    value = case op2 of
+      0 -> mlOp0 inst
+      1 -> mlOp1 inst
+      2 -> mlOp2 inst
+      3 -> mlOp3 inst
+      4 -> mlOp4 inst
+
 
 

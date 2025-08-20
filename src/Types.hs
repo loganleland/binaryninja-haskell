@@ -50,11 +50,13 @@ module Types
   , BNLowLevelILOperation(..)
   , BNMediumLevelILInstruction(..)
   , BNMediumLevelILOperation(..)
+  , BNVariable(..)
   , Function(..)
   , FunctionList(..)
   , SymbolList(..)
   , SymbolType(..)
   , SymbolBinding(..)
+  , BNRegisterValueType(..)
   , Types.alignment
   ) where
 
@@ -139,6 +141,28 @@ instance Storable BNStringRef where
     pokeByteOff ptr 0 $ fromEnum t
     pokeByteOff ptr 8 s
     pokeByteOff ptr 16 l
+
+
+data BNVariable = BNVariable
+  { varSourceType   :: !Word64
+  , varRef  :: !CSize
+  , varStorage :: !CInt
+  } deriving (Eq, Show)
+
+
+instance Storable BNVariable where
+  sizeOf _ = 24
+  alignment _ = Types.alignment
+  peek ptr = do
+    t  <- peekByteOff ptr 0 :: IO Word64
+    r  <- peekByteOff ptr 8  :: IO CSize
+    s  <- peekByteOff ptr 16 :: IO CInt
+    return (BNVariable t r s)
+  poke ptr (BNVariable t r s) = do
+    pokeByteOff ptr 0 t
+    pokeByteOff ptr 8 r
+    pokeByteOff ptr 16 s
+
 
 
 data FunctionList = FunctionList
@@ -263,4 +287,65 @@ instance Storable BNMediumLevelILInstruction where
     pokeByteOff ptr 48 o3
     pokeByteOff ptr 56 o4
     pokeByteOff ptr 64 addr
+
+
+
+data BNRegisterValueType
+  = UndeterminedValue
+  | EntryValue
+  | ConstantValue
+  | ConstantPointerValue
+  | ExternalPointerValue
+  | StackFrameOffset
+  | ReturnAddressValue
+  | ImportedAddressValue
+  | SignedRangeValue
+  | UnsignedRangeValue
+  | LookupTableValue
+  | InSetOfValues
+  | NotInSetOfValues
+  | ConstantDataValue
+  | ConstantDataZeroExtendValue
+  | ConstantDataSignExtendValue
+  | ConstantDataAggregateValue
+  deriving (Eq, Show)
+
+
+instance Enum BNRegisterValueType where
+  fromEnum UndeterminedValue           = 0
+  fromEnum EntryValue                  = 1
+  fromEnum ConstantValue               = 2
+  fromEnum ConstantPointerValue        = 3
+  fromEnum ExternalPointerValue        = 4
+  fromEnum StackFrameOffset            = 5
+  fromEnum ReturnAddressValue          = 6
+  fromEnum ImportedAddressValue        = 7
+  fromEnum SignedRangeValue            = 8
+  fromEnum UnsignedRangeValue          = 9
+  fromEnum LookupTableValue            = 10
+  fromEnum InSetOfValues               = 11
+  fromEnum NotInSetOfValues            = 12
+  fromEnum ConstantDataValue           = 0x8000
+  fromEnum ConstantDataZeroExtendValue = 0x8001
+  fromEnum ConstantDataSignExtendValue = 0x8002
+  fromEnum ConstantDataAggregateValue  = 0x8003
+
+  toEnum 0x0000 = UndeterminedValue
+  toEnum 0x0001 = EntryValue
+  toEnum 0x0002 = ConstantValue
+  toEnum 0x0003 = ConstantPointerValue
+  toEnum 0x0004 = ExternalPointerValue
+  toEnum 0x0005 = StackFrameOffset
+  toEnum 0x0006 = ReturnAddressValue
+  toEnum 0x0007 = ImportedAddressValue
+  toEnum 0x0008 = SignedRangeValue
+  toEnum 0x0009 = UnsignedRangeValue
+  toEnum 0x000A = LookupTableValue
+  toEnum 0x000B = InSetOfValues
+  toEnum 0x000C = NotInSetOfValues
+  toEnum 0x8000 = ConstantDataValue
+  toEnum 0x8001 = ConstantDataZeroExtendValue
+  toEnum 0x8002 = ConstantDataSignExtendValue
+  toEnum 0x8003 = ConstantDataAggregateValue
+  toEnum n      = error $ "BNRegisterValueType.toEnum: invalid tag " ++ show n
 
