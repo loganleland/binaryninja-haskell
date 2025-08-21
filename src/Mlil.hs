@@ -80,16 +80,16 @@ foreign import ccall unsafe "BNMediumLevelILGetOperandList"
     :: BNMlilFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
 
 
-getExprList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getExprList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Int]
 getExprList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
     count  <- fromIntegral <$> peek countPtr
     xs <- if rawPtr == nullPtr || count == 0
       then return []
-      else peekArray count rawPtr
+      else map fromIntegral <$> peekArray count rawPtr
     when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
-    mapM (mlilByIndex func . fromIntegral ) xs
+    return xs
 
 
 getExpr :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
@@ -108,9 +108,20 @@ getInt inst index =
           4 -> mlOp4 inst
 
 
+getIntList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Int]
+getIntList = getExprList
+
+
+getInstList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getInstList func expr operand = do
+  indexList <- getExprList func expr operand
+  mapM (mlilByIndex func . fromIntegral) indexList
+
+
 foreign import ccall unsafe "BNFromVariableIdentifierPtr"
   c_BNFromVariableIdentifierPtr
     :: CULLong -> IO (Ptr BNVariable)
+
 
 foreign import ccall unsafe "freeBNVariable"
   c_freeBNVariable
@@ -204,6 +215,7 @@ getConstantData func inst op1 op2 =
       2 -> mlOp2 inst
       3 -> mlOp3 inst
       4 -> mlOp4 inst
+
 
 
 

@@ -51,6 +51,7 @@ module Types
   , BNMediumLevelILInstruction(..)
   , BNMediumLevelILOperation(..)
   , BNVariable(..)
+  , BNSSAVariable(..)
   , Function(..)
   , FunctionList(..)
   , SymbolList(..)
@@ -163,6 +164,11 @@ instance Storable BNVariable where
     pokeByteOff ptr 8 r
     pokeByteOff ptr 16 s
 
+
+data BNSSAVariable = BNSSAVariable
+  { var :: BNVariable
+  , version :: Int
+  } deriving (Eq, Show)
 
 
 data FunctionList = FunctionList
