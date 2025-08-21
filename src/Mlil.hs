@@ -191,6 +191,10 @@ getSSAVar inst indexVar indexVersion = do
                              4 -> mlOp4 inst
 
 
+getSSAVarAndDest :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
+getSSAVarAndDest = getSSAVar 
+
+
 getFloat :: BNMediumLevelILInstruction -> Int -> Double
 getFloat inst index =
   case mlSize inst of
