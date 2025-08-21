@@ -25,10 +25,12 @@ module Types
   , newForeignPtr 
   , pointerSize
   , peek
+  , peekElemOff
   , alloca
   , castPtr
   , poke
   , peekArray
+  , forM
   , when
   , BNBinaryView
   , BNBinaryViewPtr
@@ -52,6 +54,7 @@ module Types
   , BNMediumLevelILOperation(..)
   , BNVariable(..)
   , BNSSAVariable(..)
+  , TargetMap
   , Function(..)
   , FunctionList(..)
   , SymbolList(..)
@@ -62,7 +65,8 @@ module Types
   ) where
 
 
-import Foreign (alloca, peek, castPtr, Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment))
+import Foreign (alloca, peek, peekElemOff, castPtr,
+                Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment))
 import Data.Word (Word8, Word32, Word64)
 import Data.Bits ((.&.))
 import Data.Int (Int64)
@@ -73,7 +77,7 @@ import Foreign.C.Types (CSize(..), CBool(..), CChar, CInt(..), CUInt(..), CULLon
 import Foreign.Marshal.Array (peekArray)
 import GHC.ForeignPtr (ForeignPtr)
 import GHC.Float (float2Double, castWord32ToFloat, castWord64ToDouble, float2Double)
-import Control.Monad (when)
+import Control.Monad (forM, when)
 
 
 pointerSize :: Int
@@ -112,6 +116,7 @@ type BNMlilFunctionPtr = Ptr BNMlilFunction_
 data BNLlilFunction_
 type BNLlilFunctionPtr = Ptr BNLlilFunction_
 
+type TargetMap = [(CULLong, CULLong)]
 
 data Function = Function
   { funcAdvancedAnalysisRequests :: !Int

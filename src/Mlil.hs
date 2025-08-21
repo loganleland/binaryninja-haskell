@@ -32,13 +32,13 @@ startIndex func arch addr = do
   if arch == nullPtr || func == nullPtr 
   then return Nothing
   else do
-    start <- c_BNMediumLevelILGetInstructionStart func arch addr        
+    startI <- c_BNMediumLevelILGetInstructionStart func arch addr        
     count <- c_BNGetMediumLevelILInstructionCount func
     -- Ensure start index is less than total mlil instructions
     -- in function
-    if start >= count
+    if startI >= count
     then return Nothing
-    else return $ Just start
+    else return $ Just startI
 
 
 -- Convert an instruction index into an expression index
@@ -147,7 +147,26 @@ getVarList func expr operand =
     when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
     mapM varFromID xs
 
- 
+
+getSSAVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [BNSSAVariable]
+getSSAVarList func expr operand =
+  alloca $ \countPtr -> do
+    rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
+    count  <- fromIntegral <$> peek countPtr :: IO Int
+    let pairCount = count `div` 2
+    result <-
+      if rawPtr == nullPtr || pairCount == 0
+        then return []
+        else forM [0 .. pairCount - 1] $ \j -> do
+               varId <- peekElemOff rawPtr (j * 2)
+               ver   <- peekElemOff rawPtr (j * 2 + 1)
+               v     <- varFromID varId
+               return (BNSSAVariable v (fromIntegral ver))
+    when (rawPtr /= nullPtr) $
+      c_BNMediumLevelILFreeOperandList rawPtr
+    return result
+
+
 getVar :: BNMediumLevelILInstruction -> Int -> IO BNVariable
 getVar inst index = varFromID value
   where
@@ -217,5 +236,20 @@ getConstantData func inst op1 op2 =
       4 -> mlOp4 inst
 
 
-
+getTargetMap :: BNMlilFunctionPtr -> CSize -> CSize -> IO TargetMap
+getTargetMap func expr operand =
+  alloca $ \countPtr -> do
+    rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
+    count  <- fromIntegral <$> peek countPtr :: IO Int
+    let pairCount = count `div` 2
+    pairs <-
+      if rawPtr == nullPtr || pairCount == 0
+        then return []
+        else forM [0 .. pairCount - 1] $ \j -> do
+               key    <- peekElemOff rawPtr (j * 2)
+               target <- peekElemOff rawPtr (j * 2 + 1)
+               return (key, target)
+    when (rawPtr /= nullPtr) $
+      c_BNMediumLevelILFreeOperandList rawPtr
+    return pairs
 
