@@ -48,12 +48,16 @@ module Types
   , BNArchPtr
   , BNMlilFunctionPtr
   , BNLlilFunctionPtr
+  , BNValueRangePtr
+  , BNLookupTableEntryPtr
   , BNLowLevelILInstruction(..)
   , BNLowLevelILOperation(..)
   , BNMediumLevelILInstruction(..)
   , BNMediumLevelILOperation(..)
+  , BNPossibleValueSet(..)
   , BNVariable(..)
   , BNSSAVariable(..)
+  , ILIntrinsic(..)
   , TargetMap
   , Function(..)
   , FunctionList(..)
@@ -61,7 +65,7 @@ module Types
   , SymbolType(..)
   , SymbolBinding(..)
   , BNRegisterValueType(..)
-  , Types.alignment
+  , Types.alignmentS
   ) where
 
 
@@ -84,8 +88,8 @@ pointerSize :: Int
 pointerSize = sizeOf (undefined :: Ptr ())
 
 
-alignment :: Int
-alignment = 8
+alignmentS :: Int
+alignmentS = 8
 
 
 -------------------------
@@ -115,8 +119,54 @@ data BNMlilFunction_
 type BNMlilFunctionPtr = Ptr BNMlilFunction_
 data BNLlilFunction_
 type BNLlilFunctionPtr = Ptr BNLlilFunction_
+data BNValueRange_
+type BNValueRangePtr = Ptr BNValueRange_
+data BNLookupTableEntry_
+type BNLookupTableEntryPtr = Ptr BNLookupTableEntry_
 
 type TargetMap = [(CULLong, CULLong)]
+
+data ILIntrinsic = ILIntrinsic
+  { intrinsicIndex :: !CULLong
+  , intrinsicArch :: !BNArchPtr
+  }
+
+
+data BNPossibleValueSet = BNPossibleValueSet
+  { pvsRegisterValTy :: !BNRegisterValueType
+  , psvValue :: !Int64
+  , pvsOffset :: !Int64
+  , pvsSize :: !CSize
+  , pvsRanges :: !BNValueRangePtr
+  , pvsValueSet :: !(Ptr CInt)
+  , pvsLookupTbl :: !BNLookupTableEntryPtr
+  , pvsCount :: !CSize
+  }
+
+
+instance Storable BNPossibleValueSet where
+  sizeOf _ = 64
+  alignment _ = Types.alignmentS
+  peek ptr = do
+    rvt  <- toEnum . fromIntegral <$> (peekByteOff ptr 0 :: IO CInt)
+    val  <- peekByteOff ptr 8
+    offset <- peekByteOff ptr 16
+    size <- peekByteOff ptr 24
+    ranges <- peekByteOff ptr 32
+    valueSet <- peekByteOff ptr 40
+    lookupTbl <- peekByteOff ptr 48
+    count <- peekByteOff ptr 56
+    return (BNPossibleValueSet rvt val offset size ranges valueSet lookupTbl count)
+  poke ptr (BNPossibleValueSet rvt val offset size ranges valueSet lookupTbl count) = do
+    pokeByteOff ptr 0 $ fromEnum rvt
+    pokeByteOff ptr 8 val
+    pokeByteOff ptr 16 offset
+    pokeByteOff ptr 24 size
+    pokeByteOff ptr 32 ranges
+    pokeByteOff ptr 40 valueSet
+    pokeByteOff ptr 48 lookupTbl
+    pokeByteOff ptr 56 count
+
 
 data Function = Function
   { funcAdvancedAnalysisRequests :: !Int
@@ -137,7 +187,7 @@ data BNStringRef = BNStringRef
 
 instance Storable BNStringRef where
   sizeOf _ = 24
-  alignment _ = Types.alignment
+  alignment _ = Types.alignmentS
   peek ptr = do
     t  <- toEnum . fromIntegral <$> (peekByteOff ptr 0 :: IO CInt)
     s  <- peekByteOff ptr 8  :: IO Word64
@@ -158,7 +208,7 @@ data BNVariable = BNVariable
 
 instance Storable BNVariable where
   sizeOf _ = 24
-  alignment _ = Types.alignment
+  alignment _ = Types.alignmentS
   peek ptr = do
     t  <- peekByteOff ptr 0 :: IO Word64
     r  <- peekByteOff ptr 8  :: IO CSize
@@ -224,7 +274,7 @@ data BNLowLevelILInstruction = BNLowLevelILInstruction
 
 instance Storable BNLowLevelILInstruction where
   sizeOf _ = 64
-  alignment _ = Types.alignment 
+  alignment _ = Types.alignmentS
   peek ptr = do
     op <- peekByteOff ptr 0
     attr <- peekByteOff ptr 4
@@ -274,7 +324,7 @@ data BNMediumLevelILInstruction = BNMediumLevelILInstruction
 
 instance Storable BNMediumLevelILInstruction where
   sizeOf _ = 72
-  alignment _ = Types.alignment 
+  alignment _ = Types.alignmentS
   peek ptr = do
     op <- peekByteOff ptr 0
     attr <- peekByteOff ptr 4

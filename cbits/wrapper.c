@@ -49,3 +49,20 @@ void freeBNVariable(BNVariable* var)
   free(var);
 }
 
+
+
+BNPossibleValueSet* BNGetCachedMediumLevelILPossibleValueSetPtr(BNMediumLevelILFunction* func, size_t idx)
+{
+  BNPossibleValueSet tmp = BNGetCachedMediumLevelILPossibleValueSet(func, idx);
+  BNPossibleValueSet* out = (BNPossibleValueSet*)malloc(sizeof (struct BNPossibleValueSet));
+  if (!out) return 0;
+  *out = tmp;
+  return out;
+}
+
+
+void freeBNPossibleValueSet(BNPossibleValueSet* vs)
+{
+  free(vs);
+}
+

@@ -257,3 +257,37 @@ getTargetMap func expr operand =
       c_BNMediumLevelILFreeOperandList rawPtr
     return pairs
 
+
+getIntrinsic :: BNMediumLevelILInstruction -> BNArchPtr -> Int -> IO ILIntrinsic
+getIntrinsic inst arch operand = return $ ILIntrinsic intrinsicIndex arch
+  where
+    intrinsicIndex = case operand of
+                     0 -> mlOp0 inst
+                     1 -> mlOp1 inst
+                     2 -> mlOp2 inst
+                     3 -> mlOp3 inst
+                     4 -> mlOp4 inst
+
+
+foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
+  c_BNGetCachedMediumLevelILPossibleValueSetPtr
+  :: BNMlilFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
+
+foreign import ccall unsafe "freeBNPossibleValueSet"
+  c_freeBNPossibleValueSet :: (Ptr BNPossibleValueSet) -> IO ()
+
+
+getConstraint :: BNMlilFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
+getConstraint func inst operand = do
+  possibleValuePtr <- c_BNGetCachedMediumLevelILPossibleValueSetPtr func constraintIndex
+  possibleValue <- peek possibleValuePtr
+  c_freeBNPossibleValueSet possibleValuePtr
+  return possibleValue
+  where
+    constraintIndex = fromIntegral $ case operand of
+                                     0 -> mlOp0 inst
+                                     1 -> mlOp1 inst
+                                     2 -> mlOp2 inst
+                                     3 -> mlOp3 inst
+                                     4 -> mlOp4 inst
+

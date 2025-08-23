@@ -7,11 +7,12 @@ module ReferenceSource
   ) where
 
 import Types
-import Foreign (alloca, peek, Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment), castPtr)
+import Foreign (alloca, peek, peekElemOff, castPtr,
+                Storable (peekByteOff, pokeByteOff, poke, peek, sizeOf, alignment))
 
 instance Storable BNReferenceSource where
   sizeOf _    = 24
-  alignment _ = Types.alignment
+  alignment _ = Types.alignmentS
   peek ptr = do
     f    <- peekByteOff ptr 0  :: IO BNFunctionPtr
     a    <- peekByteOff ptr 8  :: IO BNArchPtr
