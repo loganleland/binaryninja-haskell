@@ -23,7 +23,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
-import Control.Monad (forM)
 
 --   BNBinaryView* BNLoadFilename(const char* const filename,
 --                                const bool updateAnalysis,
