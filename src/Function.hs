@@ -15,6 +15,7 @@ module Function (
   , setComment
   , Function.llil
   , Function.mlil
+  , Function.mlilSSA
   , Function.print
   ) where
 
@@ -136,12 +137,30 @@ foreign import ccall unsafe "BNGetFunctionMediumLevelIL"
   c_BNGetFunctionMediumLevelIL :: BNFunctionPtr -> IO BNMlilFunctionPtr
 
 
+foreign import ccall unsafe "BNGetMediumLevelILSSAForm"
+  c_BNGetMediumLevelILSSAForm :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
+
+
 mlil :: BNFunctionPtr -> IO (Maybe BNMlilFunctionPtr)
 mlil func = do
-  if func == nullPtr then return Nothing
+  if func == nullPtr
+  then return Nothing
   else do
     mlilFuncPtr <- c_BNGetFunctionMediumLevelIL func
     return $ ptrToMaybe mlilFuncPtr 
+
+
+mlilSSA :: BNFunctionPtr -> IO (Maybe BNMlilSSAFunctionPtr)
+mlilSSA func = do
+  if func == nullPtr
+  then return Nothing
+  else do
+    mlilFuncPtr <- c_BNGetFunctionMediumLevelIL func
+    case ptrToMaybe mlilFuncPtr of
+      Nothing ->
+        return Nothing
+      Just func' ->
+        ptrToMaybe <$> c_BNGetMediumLevelILSSAForm func'
 
 
 print :: BNFunctionPtr -> IO ()

@@ -47,6 +47,7 @@ module Types
   , BNReferenceSourcePtr
   , BNArchPtr
   , BNMlilFunctionPtr
+  , BNMlilSSAFunctionPtr
   , BNLlilFunctionPtr
   , BNValueRangePtr
   , BNLookupTableEntryPtr
@@ -117,6 +118,8 @@ data BNArch_
 type BNArchPtr = Ptr BNArch_
 data BNMlilFunction_
 type BNMlilFunctionPtr = Ptr BNMlilFunction_
+data BNMlilSSAFunction_
+type BNMlilSSAFunctionPtr = Ptr BNMlilSSAFunction_
 data BNLlilFunction_
 type BNLlilFunctionPtr = Ptr BNLlilFunction_
 data BNValueRange_
@@ -125,6 +128,7 @@ data BNLookupTableEntry_
 type BNLookupTableEntryPtr = Ptr BNLookupTableEntry_
 
 type TargetMap = [(CULLong, CULLong)]
+
 
 data ILIntrinsic = ILIntrinsic
   { intrinsicIndex :: !CULLong

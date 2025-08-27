@@ -10,24 +10,24 @@ import GHC.Float (float2Double)
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart
-    :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
+    :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILInstructionCount"
-  c_BNGetMediumLevelILInstructionCount :: BNMlilFunctionPtr -> IO CSize
+  c_BNGetMediumLevelILInstructionCount :: BNMlilSSAFunctionPtr -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
   c_BNGetMediumLevelILIndexForInstruction
-    :: BNMlilFunctionPtr -> Word64 -> IO CSize
+    :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
   c_BNGetMediumLevelILByIndexPtr
-    :: BNMlilFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
+    :: BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
 
 
-startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO (Maybe CSize)
+startIndex :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO (Maybe CSize)
 startIndex func arch addr = do
   if arch == nullPtr || func == nullPtr 
   then return Nothing
@@ -42,11 +42,11 @@ startIndex func arch addr = do
 
 
 -- Convert an instruction index into an expression index
-instIndexToExprIndex :: BNMlilFunctionPtr -> Word64 -> IO CSize
+instIndexToExprIndex :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 
-mlilByIndex :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+mlilByIndex :: BNMlilSSAFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
 mlilByIndex func index = do
   p <- c_BNGetMediumLevelILByIndexPtr func index
   if p == nullPtr
@@ -57,7 +57,7 @@ mlilByIndex func index = do
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource
 fromRef :: BNReferenceSource -> IO (Maybe BNMediumLevelILInstruction)
 fromRef ref = do
-  func <- mlil (bnFunc ref)
+  func <- mlilSSA (bnFunc ref)
   case func of
     Nothing -> return Nothing
     Just func' -> do
@@ -77,10 +77,10 @@ foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
 -- assume (delete after check): return is list of expression index to recover list of mlil instructions
 foreign import ccall unsafe "BNMediumLevelILGetOperandList"
   c_BNMediumLevelILGetOperandList
-    :: BNMlilFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
+    :: BNMlilSSAFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
 
 
-getExprList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Int]
+getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
 getExprList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
@@ -92,7 +92,7 @@ getExprList func expr operand =
     return xs
 
 
-getExpr :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+getExpr :: BNMlilSSAFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
 getExpr = mlilByIndex 
 
 
@@ -108,11 +108,11 @@ getInt inst index =
           4 -> mlOp4 inst
 
 
-getIntList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Int]
+getIntList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
 getIntList = getExprList
 
 
-getInstList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getInstList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
 getInstList func expr operand = do
   indexList <- getExprList func expr operand
   mapM (mlilByIndex func . fromIntegral) indexList
@@ -136,7 +136,7 @@ varFromID index = do
   return val
 
 
-getVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [BNVariable]
+getVarList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [BNVariable]
 getVarList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
@@ -148,7 +148,7 @@ getVarList func expr operand =
     mapM varFromID xs
 
 
-getSSAVarList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [BNSSAVariable]
+getSSAVarList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [BNSSAVariable]
 getSSAVarList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
@@ -240,7 +240,7 @@ getConstantData func inst op1 op2 =
       4 -> mlOp4 inst
 
 
-getTargetMap :: BNMlilFunctionPtr -> CSize -> CSize -> IO TargetMap
+getTargetMap :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO TargetMap
 getTargetMap func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
@@ -271,13 +271,13 @@ getIntrinsic inst arch operand = return $ ILIntrinsic intrinsicIndex arch
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
   c_BNGetCachedMediumLevelILPossibleValueSetPtr
-  :: BNMlilFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
+  :: BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
 
 foreign import ccall unsafe "freeBNPossibleValueSet"
   c_freeBNPossibleValueSet :: (Ptr BNPossibleValueSet) -> IO ()
 
 
-getConstraint :: BNMlilFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
+getConstraint :: BNMlilSSAFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
 getConstraint func inst operand = do
   possibleValuePtr <- c_BNGetCachedMediumLevelILPossibleValueSetPtr func constraintIndex
   possibleValue <- peek possibleValuePtr
