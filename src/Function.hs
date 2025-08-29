@@ -15,6 +15,7 @@ module Function (
   , setComment
   , Function.llil
   , Function.mlil
+  , Function.mlilToSSA
   , Function.mlilSSA
   , Function.print
   ) where
@@ -150,17 +151,20 @@ mlil func = do
     return $ ptrToMaybe mlilFuncPtr 
 
 
+mlilToSSA :: BNMlilFunctionPtr -> IO (Maybe BNMlilSSAFunctionPtr)
+mlilToSSA func = ptrToMaybe <$> c_BNGetMediumLevelILSSAForm func
+
+
 mlilSSA :: BNFunctionPtr -> IO (Maybe BNMlilSSAFunctionPtr)
 mlilSSA func = do
-  if func == nullPtr
-  then return Nothing
-  else do
-    mlilFuncPtr <- c_BNGetFunctionMediumLevelIL func
-    case ptrToMaybe mlilFuncPtr of
-      Nothing ->
-        return Nothing
-      Just func' ->
-        ptrToMaybe <$> c_BNGetMediumLevelILSSAForm func'
+  mlilFunc <- mlil func
+  case mlilFunc of
+    Nothing -> return Nothing
+    Just mlilFunc' -> do
+      mlilSSAFunc <- c_BNGetMediumLevelILSSAForm mlilFunc'
+      case ptrToMaybe mlilSSAFunc of
+        Nothing -> return Nothing
+        Just mlilSSAFunc' -> return $ ptrToMaybe mlilSSAFunc'
 
 
 print :: BNFunctionPtr -> IO ()

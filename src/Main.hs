@@ -58,12 +58,8 @@ main = do
   --Prelude.print symCodeRefs
   codeRef <- ReferenceSource.codeRefs view 4462920
   --llils <- mapM Llil.fromRef codeRef
-  mlils <- mapM Mlil.fromRef codeRef
-  --mapM_ Prelude.print $ zip codeRef llils
-  mapM_ Prelude.print $ zip codeRef mlils
-  --Prelude.print "TESTING Llil.at"
-  --testAt <- Llil.at view 4210452
-  --Prelude.print testAt
+  mlil <- mapM Mlil.fromRef codeRef
+  mapM_ Prelude.print $ zip codeRef mlil
   shutdown
   putStrLn "Shutting Down...."
 
