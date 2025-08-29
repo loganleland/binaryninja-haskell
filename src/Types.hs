@@ -313,7 +313,7 @@ data BNMediumLevelILOperation =  MLIL_NOP | MLIL_SET_VAR | MLIL_SET_VAR_FIELD | 
 
 
 data BNMediumLevelILInstruction = BNMediumLevelILInstruction
-  { mlOperation     :: !Word32
+  { mlOperation     :: !BNMediumLevelILOperation
   , mlAttributes    :: !Word32
   , mlSourceOperand :: !CUInt
   , mlSize          :: !CSize
@@ -330,7 +330,7 @@ instance Storable BNMediumLevelILInstruction where
   sizeOf _ = 72
   alignment _ = Types.alignmentS
   peek ptr = do
-    op <- peekByteOff ptr 0
+    op <- toEnum <$> peekByteOff ptr 0
     attr <- peekByteOff ptr 4
     srcOp <- peekByteOff ptr 8
     sz <- peekByteOff ptr 16
@@ -342,7 +342,7 @@ instance Storable BNMediumLevelILInstruction where
     addr <- peekByteOff ptr 64
     return (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr)
   poke ptr (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr) = do
-    pokeByteOff ptr 0 op
+    pokeByteOff ptr 0 $ fromEnum op
     pokeByteOff ptr 4 attr
     pokeByteOff ptr 8 srcOp
     pokeByteOff ptr 16 sz
