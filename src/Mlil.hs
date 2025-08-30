@@ -24,12 +24,12 @@ foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
 
 foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
   c_BNGetMediumLevelILByIndexPtr
-    :: BNMlilFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
+    :: Ptr BNMediumLevelILInstruction -> BNMlilFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
 
 
 foreign import ccall unsafe "BNGetMediumLevelSSAILByIndexPtr"
   c_BNGetMediumLevelSSAILByIndexPtr
-    :: BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
+    :: Ptr BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
 
 foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
   c_BNGetMediumLevelILSSAExprIndex
@@ -57,14 +57,11 @@ instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 mlilByIndex :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
 mlilByIndex func index = do
-  p <- c_BNGetMediumLevelILByIndexPtr func index
-  if p == nullPtr
-  then return Nothing
-  else Just <$> peek p
-
-foreign import ccall unsafe "freeBNMediumLevelInstruction"
-  c_freeBNMediumLevelInstruction
-  :: Ptr BNMediumLevelILInstruction -> IO ()
+  alloca $ \p -> do
+    _ <- c_BNGetMediumLevelILByIndexPtr p func index
+    if p == nullPtr
+    then return Nothing
+    else Just <$> peek p
 
 
 -- Given a raw mlil function pointer and expr index valid for mlil (not mlil ssa):
@@ -76,13 +73,12 @@ mlilSSAByIndex func index = do
   ssaFunc <- mlilToSSA func
   case ssaFunc of
     Nothing -> return Nothing
-    Just ssaFunc' -> do
-      p <- c_BNGetMediumLevelSSAILByIndexPtr ssaFunc' ssaExprIndex
-      finally
-        (if p == nullPtr
+    Just ssaFunc' ->
+      alloca $ \p -> do
+        _ <- c_BNGetMediumLevelSSAILByIndexPtr p ssaFunc' ssaExprIndex
+        if p == nullPtr
         then return Nothing
-        else Just <$> peek p)
-        (c_freeBNMediumLevelInstruction p)
+        else Just <$> peek p
 
 
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource

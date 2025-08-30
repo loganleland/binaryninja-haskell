@@ -17,20 +17,16 @@ void freeBNLowLevelInstruction(BNLowLevelILInstruction* inst)
 }
 
 
-// BINARYNINJACOREAPI BNMediumLevelILInstruction BNGetMediumLevelILByIndex(BNMediumLevelILFunction* func, size_t i);
-BNMediumLevelILInstruction* BNGetMediumLevelILByIndexPtr(BNMediumLevelILFunction* func, size_t i)
+void BNGetMediumLevelILByIndexPtr(BNMediumLevelILInstruction* out, BNMediumLevelILFunction* func, size_t i)
 {
-  BNMediumLevelILInstruction tmp = BNGetMediumLevelILByIndex(func, i);
-  BNMediumLevelILInstruction* out = (BNMediumLevelILInstruction*)malloc(sizeof (struct BNMediumLevelILInstruction));
-  if (!out) return 0;
-  *out = tmp;
-  return out;
+  *out = BNGetMediumLevelILByIndex(func, i);
 }
 
 
-void freeBNMediumLevelInstruction(BNMediumLevelILInstruction* inst)
+void BNGetMediumLevelSSAILByIndexPtr(BNMediumLevelILInstruction* out,
+                                                            BNMediumLevelILFunction* func, size_t i)
 {
-  free(inst);
+  return BNGetMediumLevelILByIndexPtr(out, func, i);
 }
 
 
@@ -65,4 +61,5 @@ void freeBNPossibleValueSet(BNPossibleValueSet* vs)
 {
   free(vs);
 }
+
 
