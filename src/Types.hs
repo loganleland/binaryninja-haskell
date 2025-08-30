@@ -335,7 +335,7 @@ instance Storable BNMediumLevelILInstruction where
   sizeOf _ = 72
   alignment _ = Types.alignmentS
   peek ptr = do
-    op <- peekByteOff ptr 0
+    op <- peekByteOff ptr 0 :: IO Word32
     attr <- peekByteOff ptr 4
     srcOp <- peekByteOff ptr 8
     sz <- peekByteOff ptr 16
@@ -346,7 +346,7 @@ instance Storable BNMediumLevelILInstruction where
     o4 <- peekByteOff ptr 56
     addr <- peekByteOff ptr 64
     Prelude.print ("TEST: " ++ show op)
-    return (BNMediumLevelILInstruction (toEnum op) attr srcOp sz o0 o1 o2 o3 o4 addr)
+    return (BNMediumLevelILInstruction (toEnum $ fromIntegral op) attr srcOp sz o0 o1 o2 o3 o4 addr)
   poke ptr (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr) = do
     pokeByteOff ptr 0 $ fromEnum op
     pokeByteOff ptr 4 attr

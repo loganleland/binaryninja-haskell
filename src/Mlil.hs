@@ -55,13 +55,11 @@ instIndexToExprIndex :: BNMlilFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 
-mlilByIndex :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+mlilByIndex :: BNMlilFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
 mlilByIndex func index = do
   alloca $ \p -> do
     _ <- c_BNGetMediumLevelILByIndexPtr p func index
-    if p == nullPtr
-    then return Nothing
-    else Just <$> peek p
+    peek p
 
 
 -- Given a raw mlil function pointer and expr index valid for mlil (not mlil ssa):
@@ -119,7 +117,7 @@ getExprList func expr operand =
     return xs
 
 
-getExpr :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+getExpr :: BNMlilFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
 getExpr = mlilByIndex 
 
 
@@ -139,7 +137,7 @@ getIntList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Int]
 getIntList = getExprList
 
 
-getInstList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [Maybe BNMediumLevelILInstruction]
+getInstList :: BNMlilFunctionPtr -> CSize -> CSize -> IO [BNMediumLevelILInstruction]
 getInstList func expr operand = do
   indexList <- getExprList func expr operand
   mapM (mlilByIndex func . fromIntegral) indexList
