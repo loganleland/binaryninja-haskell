@@ -425,13 +425,13 @@ instance Storable BNReferenceSource where
   sizeOf _ = 24
   alignment _ = Types.alignmentS
   peek ptr = do
-    f <- peekByteOff ptr 0  :: IO BNFunctionPtr
-    a <- peekByteOff ptr 8  :: IO BNArchPtr
+    f <- peekByteOff ptr 0 :: IO BNFunctionPtr
+    a <- peekByteOff ptr 8 :: IO BNArchPtr
     addr <- peekByteOff ptr 16 :: IO Word64
     return $ BNReferenceSource f a addr
   poke ptr (BNReferenceSource f a addr) = do
-    pokeByteOff ptr 0  f
-    pokeByteOff ptr 8  a
+    pokeByteOff ptr 0 f
+    pokeByteOff ptr 8 a
     pokeByteOff ptr 16 addr
 
 

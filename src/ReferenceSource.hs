@@ -1,6 +1,5 @@
 module ReferenceSource
   ( ReferenceSource.codeRefs
-  , BNReferenceSource
   , bnFunc
   , bnArch
   , bnAddr

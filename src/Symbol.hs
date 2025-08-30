@@ -77,7 +77,7 @@ auto :: BNSymbolPtr -> IO Bool
 auto sym = do
   toBool <$> c_BNIsSymbolAutoDefined sym
 
-codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [RS.BNReferenceSource]
+codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [BNReferenceSource]
 codeRefs view sym = do
   addr <- Symbol.address sym
   RS.codeRefs view addr
