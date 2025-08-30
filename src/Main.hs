@@ -1,3 +1,6 @@
+-- Test program (To be moved to testing prior to first release)
+
+
 module Main where
 
 import FFI (getProduct, getProductType, getLicensedUserEmail,
@@ -58,8 +61,8 @@ main = do
   --Prelude.print symCodeRefs
   codeRef <- ReferenceSource.codeRefs view 4462920
   --llils <- mapM Llil.fromRef codeRef
-  mlil <- mapM Mlil.fromRef codeRef
-  mapM_ Prelude.print $ zip codeRef mlil
+  mlils <- mapM Mlil.fromRef codeRef
+  mapM_ Prelude.print $ zip codeRef mlils
   shutdown
   putStrLn "Shutting Down...."
 

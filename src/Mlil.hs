@@ -62,6 +62,10 @@ mlilByIndex func index = do
   then return Nothing
   else Just <$> peek p
 
+foreign import ccall unsafe "freeBNMediumLevelInstruction"
+  c_freeBNMediumLevelInstruction
+  :: Ptr BNMediumLevelILInstruction -> IO ()
+
 
 -- Given a raw mlil function pointer and expr index valid for mlil (not mlil ssa):
 --   (1) cast raw mlil function pointer to raw mlil ssa function pointer
@@ -74,9 +78,11 @@ mlilSSAByIndex func index = do
     Nothing -> return Nothing
     Just ssaFunc' -> do
       p <- c_BNGetMediumLevelSSAILByIndexPtr ssaFunc' ssaExprIndex
-      if p == nullPtr
-      then return Nothing
-      else Just <$> peek p
+      finally
+        (if p == nullPtr
+        then return Nothing
+        else Just <$> peek p)
+        (c_freeBNMediumLevelInstruction p)
 
 
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource
@@ -315,4 +321,25 @@ getConstraint func inst operand = do
                                      2 -> mlOp2 inst
                                      3 -> mlOp3 inst
                                      4 -> mlOp4 inst
+
+
+foreign import ccall unsafe "BNGetMediumLevelILBasicBlockList"
+  c_BNGetMediumLevelILBasicBlockList
+  :: BNMlilSSAFunctionPtr -> Ptr CSize -> IO (Ptr BNBasicBlockPtr)
+
+foreign import ccall unsafe "BNFreeBasicBlockList"
+  c_BNFreeBasicBlockList
+  :: Ptr BNBasicBlockPtr -> CSize -> IO ()
+
+basicBlocks :: BNMlilSSAFunctionPtr -> IO [BNBasicBlockPtr]
+basicBlocks func =
+  alloca $ \countPtr -> do
+    arrPtr <- c_BNGetMediumLevelILBasicBlockList func countPtr
+    count  <- peek countPtr
+    if arrPtr == nullPtr || count == 0
+    then return []
+    else do
+      refs <- peekArray (fromIntegral count) (castPtr arrPtr :: Ptr BNBasicBlockPtr)
+      c_BNFreeBasicBlockList arrPtr count
+      return refs
 

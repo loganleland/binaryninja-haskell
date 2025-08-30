@@ -32,6 +32,7 @@ module Types
   , peekArray
   , forM
   , when
+  , finally
   , BNBinaryView
   , BNBinaryViewPtr
   , BNProgressFunction
@@ -49,6 +50,7 @@ module Types
   , BNMlilFunctionPtr
   , BNMlilSSAFunctionPtr
   , BNLlilFunctionPtr
+  , BNBasicBlockPtr
   , BNValueRangePtr
   , BNLookupTableEntryPtr
   , BNLowLevelILInstruction(..)
@@ -83,7 +85,7 @@ import Foreign.Marshal.Array (peekArray)
 import GHC.ForeignPtr (ForeignPtr)
 import GHC.Float (float2Double, castWord32ToFloat, castWord64ToDouble, float2Double)
 import Control.Monad (forM, when)
-
+import Control.Exception (finally)
 
 pointerSize :: Int
 pointerSize = sizeOf (undefined :: Ptr ())
@@ -126,6 +128,9 @@ data BNValueRange_
 type BNValueRangePtr = Ptr BNValueRange_
 data BNLookupTableEntry_
 type BNLookupTableEntryPtr = Ptr BNLookupTableEntry_
+data BNBasicBlock_
+type BNBasicBlockPtr = Ptr BNBasicBlock_
+
 
 type TargetMap = [(CULLong, CULLong)]
 
