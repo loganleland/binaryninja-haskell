@@ -1,5 +1,6 @@
 module Mlil
   ( Mlil.fromRef
+  , Mlil.instructions
   ) where
 
 import Types
@@ -36,18 +37,18 @@ foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
     :: BNMlilFunctionPtr -> CSize -> IO CSize
 
 
-startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO (Maybe CSize)
+startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 startIndex func arch addr = do
   if arch == nullPtr || func == nullPtr 
-  then return Nothing
+  then error "startIndex: called with nullPtr argument"
   else do
     startI <- c_BNMediumLevelILGetInstructionStart func arch addr        
     count <- c_BNGetMediumLevelILInstructionCount func
     -- Ensure start index is less than total mlil instructions
     -- in function
     if startI >= count
-    then return Nothing
-    else return $ Just startI
+    then error "startIndex: startI >= count"
+    else return startI
 
 
 -- Convert an instruction index into an expression index
@@ -65,33 +66,24 @@ mlilByIndex func index = do
 -- Given a raw mlil function pointer and expr index valid for mlil (not mlil ssa):
 --   (1) cast raw mlil function pointer to raw mlil ssa function pointer
 --   (2) cast mlil expression index to mlil ssa expression index
-mlilSSAByIndex :: BNMlilFunctionPtr -> CSize -> IO (Maybe BNMediumLevelILInstruction)
+mlilSSAByIndex :: BNMlilFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
 mlilSSAByIndex func index = do
   ssaExprIndex <- c_BNGetMediumLevelILSSAExprIndex func index
   ssaFunc <- mlilToSSA func
-  case ssaFunc of
-    Nothing -> return Nothing
-    Just ssaFunc' ->
-      alloca $ \p -> do
-        _ <- c_BNGetMediumLevelSSAILByIndexPtr p ssaFunc' ssaExprIndex
-        if p == nullPtr
-        then return Nothing
-        else Just <$> peek p
+  alloca $ \p -> do
+    _ <- c_BNGetMediumLevelSSAILByIndexPtr p ssaFunc ssaExprIndex
+    if p == nullPtr
+    then error "mlilSSAByIndex: c_BNGetMediumLevelSSAILByIndexPtr failed"
+    else peek p
 
 
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource
-fromRef :: BNReferenceSource -> IO (Maybe BNMediumLevelILInstruction)
+fromRef :: BNReferenceSource -> IO BNMediumLevelILInstruction
 fromRef ref = do
   func <- mlil (bnFunc ref)
-  case func of
-    Nothing -> return Nothing
-    Just func' -> do
-      sIndex <- startIndex func' (bnArch ref) (bnAddr ref)
-      case sIndex of
-        Nothing -> return Nothing
-        Just sIndex' -> do
-          exprIndex <- instIndexToExprIndex func' (fromIntegral sIndex')
-          mlilSSAByIndex func' exprIndex
+  sIndex <- startIndex func (bnArch ref) (bnAddr ref)
+  exprIndex <- instIndexToExprIndex func (fromIntegral sIndex)
+  mlilSSAByIndex func exprIndex
 
 
 foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
@@ -321,9 +313,30 @@ foreign import ccall unsafe "BNGetMediumLevelILBasicBlockList"
   c_BNGetMediumLevelILBasicBlockList
   :: BNMlilSSAFunctionPtr -> Ptr CSize -> IO (Ptr BNBasicBlockPtr)
 
+
 foreign import ccall unsafe "BNFreeBasicBlockList"
   c_BNFreeBasicBlockList
   :: Ptr BNBasicBlockPtr -> CSize -> IO ()
+
+
+foreign import ccall unsafe "BNGetBasicBlockStart"
+  c_BNGetBasicBlockStart
+  :: BNBasicBlockPtr -> IO CULLong
+
+
+foreign import ccall unsafe "BNGetBasicBlockEnd"
+  c_BNGetBasicBlockEnd
+  :: BNBasicBlockPtr -> IO CULLong
+
+
+foreign import ccall unsafe "BNGetBasicBlockLength"
+  c_BNGetBasicBlockLength
+  :: BNBasicBlockPtr -> IO CULLong
+
+foreign import ccall unsafe "BNGetBasicBlockFunction"
+  c_BNGetBasicBlockFunction
+  :: BNBasicBlockPtr -> IO BNFunctionPtr
+
 
 basicBlocks :: BNMlilSSAFunctionPtr -> IO [BNBasicBlockPtr]
 basicBlocks func =
@@ -336,4 +349,20 @@ basicBlocks func =
       refs <- peekArray (fromIntegral count) (castPtr arrPtr :: Ptr BNBasicBlockPtr)
       c_BNFreeBasicBlockList arrPtr count
       return refs
+
+
+blockToInstructions :: BNBasicBlockPtr -> IO [BNMediumLevelILInstruction]
+blockToInstructions block = do
+  startExpr <- fromIntegral <$> c_BNGetBasicBlockStart block
+  endExpr <- fromIntegral <$> c_BNGetBasicBlockEnd block
+  func <- c_BNGetBasicBlockFunction block
+  mlilFunc <- mlil func
+  mapM (mlilSSAByIndex mlilFunc) [startExpr .. endExpr-1]
+
+
+instructions :: BNMlilSSAFunctionPtr -> IO [BNMediumLevelILInstruction]
+instructions func = do
+  blocks <- basicBlocks func
+  perBlock <- mapM blockToInstructions blocks
+  return $ concat perBlock
 

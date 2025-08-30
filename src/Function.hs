@@ -53,8 +53,10 @@ foreign import ccall unsafe "BNGetFunctionSymbol"
   c_BNGetFunctionSymbol :: BNFunctionPtr -> IO BNSymbolPtr
 
 
-symbol :: BNFunctionPtr -> IO (Maybe BNSymbolPtr)
-symbol = fmap ptrToMaybe . c_BNGetFunctionSymbol
+symbol :: BNFunctionPtr -> IO BNSymbolPtr
+symbol func = do
+  p <- c_BNGetFunctionSymbol func
+  maybe (error "c_BNGetFunctionSymbol returned null") return (ptrToMaybe p)
 
 
 foreign import ccall unsafe "BNWasFunctionAutomaticallyDiscovered"
@@ -126,12 +128,15 @@ foreign import ccall unsafe "BNGetFunctionLowLevelIL"
   c_BNGetFunctionLowLevelIL :: BNFunctionPtr -> IO BNLlilFunctionPtr
 
 
-llil :: BNFunctionPtr -> IO (Maybe BNLlilFunctionPtr)
+llil :: BNFunctionPtr -> IO BNLlilFunctionPtr
 llil func = do
-  if func == nullPtr then return Nothing
+  if func == nullPtr
+  then error "llil: func == nullPtr"
   else do
     llilFuncPtr <- c_BNGetFunctionLowLevelIL func
-    return $ ptrToMaybe llilFuncPtr 
+    if llilFuncPtr == nullPtr
+    then error "llil: c_BNGetFunctionLowLevelIL returned nullPtr"
+    else return llilFuncPtr 
 
 
 foreign import ccall unsafe "BNGetFunctionMediumLevelIL"
@@ -142,29 +147,29 @@ foreign import ccall unsafe "BNGetMediumLevelILSSAForm"
   c_BNGetMediumLevelILSSAForm :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
 
 
-mlil :: BNFunctionPtr -> IO (Maybe BNMlilFunctionPtr)
+mlil :: BNFunctionPtr -> IO BNMlilFunctionPtr
 mlil func = do
   if func == nullPtr
-  then return Nothing
+  then error "mlil: func == nullPtr"
   else do
     mlilFuncPtr <- c_BNGetFunctionMediumLevelIL func
-    return $ ptrToMaybe mlilFuncPtr 
+    if mlilFuncPtr == nullPtr
+    then error "mlil: c_BNGetFunctionMediumLevelIL returned nullPtr"
+    else return mlilFuncPtr 
 
 
-mlilToSSA :: BNMlilFunctionPtr -> IO (Maybe BNMlilSSAFunctionPtr)
-mlilToSSA func = ptrToMaybe <$> c_BNGetMediumLevelILSSAForm func
+mlilToSSA :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
+mlilToSSA func = do
+  p <- c_BNGetMediumLevelILSSAForm func
+  if p == nullPtr
+  then error "mlilToSSA: c_BNGetMediumLevelILSSAForm returned nullPtr"
+  else return p
 
 
-mlilSSA :: BNFunctionPtr -> IO (Maybe BNMlilSSAFunctionPtr)
+mlilSSA :: BNFunctionPtr -> IO BNMlilSSAFunctionPtr
 mlilSSA func = do
   mlilFunc <- mlil func
-  case mlilFunc of
-    Nothing -> return Nothing
-    Just mlilFunc' -> do
-      mlilSSAFunc <- c_BNGetMediumLevelILSSAForm mlilFunc'
-      case ptrToMaybe mlilSSAFunc of
-        Nothing -> return Nothing
-        Just mlilSSAFunc' -> return $ ptrToMaybe mlilSSAFunc'
+  c_BNGetMediumLevelILSSAForm mlilFunc
 
 
 print :: BNFunctionPtr -> IO ()

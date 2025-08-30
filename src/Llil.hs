@@ -70,29 +70,23 @@ llilByIndex func index =
 -- Retrieve the best LLIL instruction for the address in BNReferenceSource
 fromRef :: BNReferenceSource -> IO (Maybe BNLowLevelILInstruction)
 fromRef ref = do
-  func <- llil (bnFunc ref)
-  case func of
-    Nothing -> return Nothing
-    Just func' -> do
-      sIndex <- startIndex func' (bnArch ref) (bnAddr ref)
-      case sIndex of
-        Nothing -> return Nothing
-        Just sIndex' -> do
-          exprIndex <- instIndexToExprIndex func' (fromIntegral sIndex')
-          Just <$> llilByIndex func' exprIndex
+  func <- Function.llil (bnFunc ref)
+  sIndex <- startIndex func (bnArch ref) (bnAddr ref)
+  case sIndex of
+     Nothing -> return Nothing
+     Just sIndex' -> do
+       exprIndex <- instIndexToExprIndex func (fromIntegral sIndex')
+       Just <$> llilByIndex func exprIndex
 
 
 at :: BNBinaryViewPtr -> Word64 -> IO (Maybe BNLowLevelILInstruction)
 at view addr = do
   rawFunc <- head <$> functionsContaining view addr
   llilFunc <- Function.llil rawFunc 
-  case llilFunc of
+  sIndex <- startIndex llilFunc (Function.architecture rawFunc) addr
+  case sIndex of
     Nothing -> return Nothing
-    Just func' -> do
-      sIndex <- startIndex func' (Function.architecture rawFunc) addr
-      case sIndex of
-        Nothing -> return Nothing
-        Just sIndex' -> do
-          exprIndex <- instIndexToExprIndex func' (fromIntegral sIndex')
-          Just <$> llilByIndex func' exprIndex
+    Just sIndex' -> do
+      exprIndex <- instIndexToExprIndex llilFunc (fromIntegral sIndex')
+      Just <$> llilByIndex llilFunc exprIndex
 
