@@ -1,19 +1,8 @@
 #include "binaryninjacore.h"
 
-// BINARYNINJACOREAPI BNLowLevelILInstruction BNGetLowLevelILByIndex(BNLowLevelILFunction* func, size_t i);
-BNLowLevelILInstruction* BNGetLowLevelILByIndexPtr(BNLowLevelILFunction* func, size_t i)
+void BNGetLowLevelILByIndexPtr(BNLowLevelILInstruction* out, BNLowLevelILFunction* func, size_t i)
 {
-  BNLowLevelILInstruction tmp = BNGetLowLevelILByIndex(func, i);
-  BNLowLevelILInstruction* out = (BNLowLevelILInstruction*)malloc(sizeof (struct BNLowLevelILInstruction));
-  if (!out) return 0;
-  *out = tmp;
-  return out;
-}
-
-
-void freeBNLowLevelInstruction(BNLowLevelILInstruction* inst)
-{
-  free(inst);
+  *out = BNGetLowLevelILByIndex(func, i);
 }
 
 
