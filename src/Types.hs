@@ -345,7 +345,6 @@ instance Storable BNMediumLevelILInstruction where
     o3 <- peekByteOff ptr 48
     o4 <- peekByteOff ptr 56
     addr <- peekByteOff ptr 64
-    Prelude.print ("TEST: " ++ show op)
     return (BNMediumLevelILInstruction (toEnum $ fromIntegral op) attr srcOp sz o0 o1 o2 o3 o4 addr)
   poke ptr (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr) = do
     pokeByteOff ptr 0 $ fromEnum op
