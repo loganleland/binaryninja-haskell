@@ -15,6 +15,7 @@ import Llil
 import Mlil
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
+import qualified Function
 
 main :: IO ()
 main = do
@@ -51,8 +52,11 @@ main = do
   existFunction <- hasFunctions view
   if existFunction then putStrLn "[*] Has functions." else putStrLn "[*] Has no functions."
   if hasSymbols view then putStrLn "[*] Has symbols." else putStrLn "[*] Has no symbols."
-  --funcs <- functions view
-  --mapM_ Function.print funcs
+  -- Get functions, mlil ssa version then all mlil ssa instructions in all functions
+  funcs <- functions view
+  mlilSSAFuncs <- mapM Function.mlilSSA funcs
+  mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs 
+  Prelude.print mlilSSAInstructions 
   symbolList <- BinaryView.symbols view
   --mapM_ Symbol.print symbolList
   stringList <- strings view
