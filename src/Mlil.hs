@@ -56,8 +56,8 @@ instIndexToExprIndex :: BNMlilFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 
-mlilByIndex :: BNMlilSSAFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
-mlilByIndex func index = do
+mlilSSAByIndex :: BNMlilSSAFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
+mlilSSAByIndex func index = do
   alloca $ \p -> do
     _ <- c_BNGetMediumLevelILByIndexPtr p func index
     peek p
@@ -66,14 +66,14 @@ mlilByIndex func index = do
 -- Given a raw mlil function pointer and expr index valid for mlil (not mlil ssa):
 --   (1) cast raw mlil function pointer to raw mlil ssa function pointer
 --   (2) cast mlil expression index to mlil ssa expression index
-mlilSSAByIndex :: BNMlilFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
-mlilSSAByIndex func index = do
+mlilByIndex :: BNMlilFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
+mlilByIndex func index = do
   ssaExprIndex <- c_BNGetMediumLevelILSSAExprIndex func index
   ssaFunc <- mlilToSSA func
   alloca $ \p -> do
     _ <- c_BNGetMediumLevelSSAILByIndexPtr p ssaFunc ssaExprIndex
     if p == nullPtr
-      then error "mlilSSAByIndex: c_BNGetMediumLevelSSAILByIndexPtr failed"
+      then error "mlilByIndex: c_BNGetMediumLevelSSAILByIndexPtr failed"
       else peek p
 
 
@@ -83,7 +83,7 @@ fromRef ref = do
   func <- mlil (bnFunc ref)
   sIndex <- startIndex func (bnArch ref) (bnAddr ref)
   exprIndex <- instIndexToExprIndex func (fromIntegral sIndex)
-  mlilSSAByIndex func exprIndex
+  mlilByIndex func exprIndex
 
 
 foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
@@ -91,31 +91,30 @@ foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
     :: Ptr CULLong -> IO ()
 
 
--- assume (delete after check): return is list of expression index to recover list of mlil instructions
 foreign import ccall unsafe "BNMediumLevelILGetOperandList"
   c_BNMediumLevelILGetOperandList
     :: BNMlilSSAFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
 
 
-getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
+getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [CSize]
 getExprList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
     count  <- fromIntegral <$> peek countPtr
     xs <- if rawPtr == nullPtr || count == 0
       then return []
-      else map fromIntegral <$> peekArray count rawPtr
+      else peekArray count rawPtr
     when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
-    return xs
+    return $ map fromIntegral xs
 
 
-getExpr :: BNMlilSSAFunctionPtr -> CSize -> IO BNMediumLevelILInstruction
-getExpr = mlilByIndex 
+getExpr :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction
+getExpr = create
 
 
-getInt :: BNMediumLevelILInstruction -> Int -> Int
+getInt :: BNMediumLevelILInstruction -> Int -> IO Int
 getInt inst index =
-  fromIntegral (fromIntegral value :: Int64)
+  return (fromIntegral value :: Int)
   where
   value = case index of
           0 -> mlOp0 inst
@@ -126,13 +125,14 @@ getInt inst index =
 
 
 getIntList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
-getIntList = getExprList
-
+getIntList func expr operand = do
+  cSizeList <- getExprList func expr operand   
+  return $ map fromIntegral cSizeList 
 
 getInstList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [BNMediumLevelILInstruction]
 getInstList func expr operand = do
   indexList <- getExprList func expr operand
-  mapM (mlilByIndex func . fromIntegral) indexList
+  mapM (mlilSSAByIndex func . fromIntegral) indexList
 
 
 foreign import ccall unsafe "BNFromVariableIdentifierPtr"
@@ -357,7 +357,7 @@ blockToInstructions block = do
   endExpr <- fromIntegral <$> c_BNGetBasicBlockEnd block
   func <- c_BNGetBasicBlockFunction block
   mlilFunc <- mlil func
-  mapM (mlilSSAByIndex mlilFunc) [startExpr .. endExpr-1]
+  mapM (mlilByIndex mlilFunc) [startExpr .. endExpr-1]
 
 
 instructions :: BNMlilSSAFunctionPtr -> IO [BNMediumLevelILInstruction]
@@ -367,17 +367,67 @@ instructions func = do
   return $ concat perBlock
 
 
-data MediumLevelILSSAInstruction =
-  MediumLevelILCallSsa
+data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
+  { instr :: BNMediumLevelILInstruction
+  , ilFunc :: BNMlilSSAFunctionPtr
+  , exprIndex :: CSize
+  }
+
+
+data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
   { output :: [BNSSAVariable]
   , dest :: MediumLevelILSSAInstruction
   , params :: [MediumLevelILSSAInstruction]
   , srcMem :: Int
-  , instr :: BNMediumLevelILInstruction
+  , core :: CoreMediumLevelILInstruction
   }
 
 
---create :: BNMlilFunctionPtr -> CSize -> MediumLevelILSSAInstruction
---create func exprIndex  = do
+data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
+  { destMemory :: Int
+  , dest :: [BNSSAVariable]
+  , core :: CoreMediumLevelILInstruction
+  }
 
+
+data MediumLevelILSSAInstruction =
+   MediumLevelILCallSsa MediumLevelILCallSsaRec
+ | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
+
+
+create :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction
+create func exprIndex  = do
+  rawInst <- mlilSSAByIndex func exprIndex
+  let coreInst = CoreMediumLevelILInstruction
+             { instr = rawInst
+             , ilFunc = func
+             , exprIndex = exprIndex
+             }
+  case mlOperation rawInst of
+    MLIL_CALL_SSA -> do
+      outputInst <- getExpr func 0
+      output <- case outputInst of
+                MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec{ dest = d }) -> return d
+                _ -> error "create: Output of MediumLevelILCallSsa is not MediumLevelILCallOutputSsa"
+      dest <- getExpr func 1
+      paramExprs <- getExprList func 2 3
+      params <- mapM (getExpr func) paramExprs 
+      srcMem <- getInt rawInst 4
+      let rec = MediumLevelILCallSsaRec
+             { output = output
+             , dest = dest
+             , params = params
+             , srcMem = srcMem
+             , core = coreInst
+             }
+      return $ MediumLevelILCallSsa rec
+    MLIL_CALL_OUTPUT_SSA -> do
+      destMemory <- getInt rawInst 0
+      dest <- getSSAVarList func 1 2
+      let rec = MediumLevelILCallOutputSsaRec
+             { destMemory = destMemory
+             , dest = dest
+             , core = coreInst
+             }
+      return $ MediumLevelILCallOutputSsa rec
 
