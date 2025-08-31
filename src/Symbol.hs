@@ -103,4 +103,3 @@ print sym = do
   putStrLn ("Ordinal   : " ++ show ord)
   putStrLn ("Auto      : " ++ show isAuto)
 
-

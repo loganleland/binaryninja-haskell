@@ -84,7 +84,7 @@ import Foreign.C.String (CString, withCString, newCString, peekCString)
 import Foreign.C.Types (CSize(..), CBool(..), CChar, CInt(..), CUInt(..), CULLong(..))
 import Foreign.Marshal.Array (peekArray)
 import GHC.ForeignPtr (ForeignPtr)
-import GHC.Float (float2Double, castWord32ToFloat, castWord64ToDouble, float2Double)
+import GHC.Float (castWord32ToFloat, castWord64ToDouble, float2Double)
 import Control.Monad (forM, when)
 import Control.Exception (finally)
 
