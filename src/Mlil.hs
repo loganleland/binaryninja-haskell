@@ -128,7 +128,7 @@ getInt inst index =
           2 -> mlOp2 inst
           3 -> mlOp3 inst
           4 -> mlOp4 inst
-
+          _ -> error $ "getInt: " ++ show index ++ " not in [0, .., 4]"
 
 getIntList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
 getIntList func expr operand = do
@@ -290,6 +290,7 @@ getIntrinsic inst arch operand = return $ ILIntrinsic intrinsicIndex arch
                      2 -> mlOp2 inst
                      3 -> mlOp3 inst
                      4 -> mlOp4 inst
+                     _ -> error $ "getIntrinsic: " ++ show operand ++ " not in [0, .., 4]"
 
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
@@ -313,6 +314,7 @@ getConstraint func inst operand = do
                                      2 -> mlOp2 inst
                                      3 -> mlOp3 inst
                                      4 -> mlOp4 inst
+                                     _ -> error $ "getConstraint: " ++ show operand ++ " not in [0, .., 4]"
 
 
 foreign import ccall unsafe "BNGetMediumLevelILBasicBlockList"
@@ -334,10 +336,6 @@ foreign import ccall unsafe "BNGetBasicBlockEnd"
   c_BNGetBasicBlockEnd
   :: BNBasicBlockPtr -> IO CULLong
 
-
-foreign import ccall unsafe "BNGetBasicBlockLength"
-  c_BNGetBasicBlockLength
-  :: BNBasicBlockPtr -> IO CULLong
 
 foreign import ccall unsafe "BNGetBasicBlockFunction"
   c_BNGetBasicBlockFunction
@@ -396,26 +394,34 @@ data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
   } deriving (Show)
 
 
+data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
+  { constant :: Int
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
+ | MediumLevelILConstPtr MediumLevelILConstPtrRec
  deriving (Show)
 
 
 create :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction
-create func exprIndex  = do
-  rawInst <- mlilSSAByIndex func exprIndex
+create func exprIndex'  = do
+  rawInst <- mlilSSAByIndex func exprIndex'
   let coreInst = CoreMediumLevelILInstruction
              { instr = rawInst
              , ilFunc = func
-             , exprIndex = exprIndex
+             , exprIndex = exprIndex'
              }
   case mlOperation rawInst of
     MLIL_CALL_SSA -> do
-      outputInst <- getExpr func 0
+      outputInst <- getExpr func (fromIntegral $ mlOp0 rawInst)
       output <- case outputInst of
                 MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec{ dest = d }) -> return d
-                _ -> error "create: Output of MediumLevelILCallSsa is not MediumLevelILCallOutputSsa"
+                _ -> error $
+                  "create: Output of MediumLevelILCallSsa: expected MediumLevelILCallOutputSsa : "
+                  ++ show outputInst
       dest <- getExpr func 1
       paramExprs <- getExprList func 2 3
       params <- mapM (getExpr func) paramExprs 
@@ -428,6 +434,7 @@ create func exprIndex  = do
              , core = coreInst
              }
       return $ MediumLevelILCallSsa rec
+
     MLIL_CALL_OUTPUT_SSA -> do
       destMemory <- getInt rawInst 0
       dest <- getSSAVarList func 1 2
@@ -437,4 +444,11 @@ create func exprIndex  = do
              , core = coreInst
              }
       return $ MediumLevelILCallOutputSsa rec
+
+    MLIL_CONST_PTR -> do
+      constant' <- getInt rawInst 0
+      let rec = MediumLevelILConstPtrRec { constant = constant' }
+      return $ MediumLevelILConstPtr rec
+
     _ -> error $ ("Unimplemented: " ++ show (mlOperation rawInst))
+
