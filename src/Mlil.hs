@@ -5,7 +5,6 @@ module Mlil
   ) where
 
 import Types
-import ReferenceSource
 import Function
 
 
@@ -130,6 +129,7 @@ getInt inst index =
           4 -> mlOp4 inst
           _ -> error $ "getInt: " ++ show index ++ " not in [0, .., 4]"
 
+
 getIntList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
 getIntList func expr operand = do
   cSizeList <- getExprList func expr operand   
@@ -199,6 +199,7 @@ getVar inst index = varFromID value
           2 -> mlOp2 inst
           3 -> mlOp3 inst
           4 -> mlOp4 inst
+          _ -> error $ "getVar: " ++ show index ++ " not in [0, .., 4]"
 
 
 getSSAVar :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
@@ -212,6 +213,8 @@ getSSAVar inst indexVar indexVersion = do
                              2 -> mlOp2 inst
                              3 -> mlOp3 inst
                              4 -> mlOp4 inst
+                             _ -> error $ "getSSAVar: " ++ show indexVersion ++
+                              " not in [0, .., 4]"
 
 
 getSSAVarAndDest :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
@@ -233,6 +236,7 @@ getFloat inst index =
             2 -> mlOp2 inst
             3 -> mlOp3 inst
             4 -> mlOp4 inst
+            _ -> error $ "getFloat: " ++ show index ++ " not in [0, .., 4]"
 
 
 foreign import ccall unsafe "BNGetConstantData"
@@ -255,12 +259,14 @@ getConstantData func inst op1 op2 =
       2 -> mlOp2 inst
       3 -> mlOp3 inst
       4 -> mlOp4 inst
+      _ -> error $ "getConstantData: state: " ++ show op1 ++ " not in [0, .., 4]"
     value = case op2 of
       0 -> mlOp0 inst
       1 -> mlOp1 inst
       2 -> mlOp2 inst
       3 -> mlOp3 inst
       4 -> mlOp4 inst
+      _ -> error $ "getConstantData: value " ++ show op2 ++ " not in [0, .., 4]"
 
 
 getTargetMap :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO TargetMap
@@ -406,6 +412,17 @@ data MediumLevelILSSAInstruction =
  deriving (Show)
 
 
+getOp :: BNMediumLevelILInstruction -> CSize -> CSize
+getOp inst operand =
+  fromIntegral $ case operand of
+                  0 -> mlOp0 inst
+                  1 -> mlOp1 inst
+                  2 -> mlOp2 inst
+                  3 -> mlOp3 inst
+                  4 -> mlOp4 inst
+                  _ -> error $ "getOp: " ++ show operand ++ " not in [0, .., 4]"
+
+
 create :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction
 create func exprIndex'  = do
   rawInst <- mlilSSAByIndex func exprIndex'
@@ -416,15 +433,15 @@ create func exprIndex'  = do
              }
   case mlOperation rawInst of
     MLIL_CALL_SSA -> do
-      outputInst <- getExpr func (fromIntegral $ mlOp0 rawInst)
+      outputInst <- getExpr func $ getOp rawInst 0
       output <- case outputInst of
                 MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec{ dest = d }) -> return d
                 _ -> error $
                   "create: Output of MediumLevelILCallSsa: expected MediumLevelILCallOutputSsa : "
                   ++ show outputInst
-      dest <- getExpr func 1
-      paramExprs <- getExprList func 2 3
-      params <- mapM (getExpr func) paramExprs 
+      dest <- getExpr func $ getOp rawInst 1
+      paramExprs <- getExprList func (getOp rawInst 2) (getOp rawInst 3)
+      params <- mapM (getExpr func . getOp rawInst) paramExprs 
       srcMem <- getInt rawInst 4
       let rec = MediumLevelILCallSsaRec
              { output = output
