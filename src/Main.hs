@@ -52,11 +52,13 @@ main = do
   existFunction <- hasFunctions view
   if existFunction then putStrLn "[*] Has functions." else putStrLn "[*] Has no functions."
   if hasSymbols view then putStrLn "[*] Has symbols." else putStrLn "[*] Has no symbols."
+
   -- Get functions, mlil ssa version then all mlil ssa instructions in all functions
-  funcs <- functions view
-  mlilSSAFuncs <- mapM Function.mlilSSA funcs
-  mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs 
-  Prelude.print mlilSSAInstructions 
+  --funcs <- functions view
+  --mlilSSAFuncs <- mapM Function.mlilSSA funcs
+  --mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs 
+  --Prelude.print mlilSSAInstructions 
+
   symbolList <- BinaryView.symbols view
   --mapM_ Symbol.print symbolList
   stringList <- strings view

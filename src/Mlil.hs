@@ -11,16 +11,17 @@ import Function
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart
-    :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
+    :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILInstructionCount"
-  c_BNGetMediumLevelILInstructionCount :: BNMlilFunctionPtr -> IO CSize
+  c_BNGetMediumLevelILInstructionCount
+  :: BNMlilSSAFunctionPtr -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
   c_BNGetMediumLevelILIndexForInstruction
-    :: BNMlilFunctionPtr -> Word64 -> IO CSize
+    :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
@@ -37,8 +38,11 @@ foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
     :: BNMlilFunctionPtr -> CSize -> IO CSize
 
 
-startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
+-- c_BNMediumLevelILGetInstructionStart is not be well defined
+-- on mlil ssa function pointer. 
+startIndex :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 startIndex func arch addr = do
+  Prelude.print ("[DEBUG] ADDR: " ++ show addr)
   if arch == nullPtr || func == nullPtr 
   then error "startIndex: called with nullPtr argument"
   else do
@@ -47,12 +51,12 @@ startIndex func arch addr = do
     -- Ensure start index is less than total mlil instructions
     -- in function
     if startI >= count
-    then error "startIndex: startI >= count"
+    then error ("startIndex: startI:" ++ show startI ++ " >= count:" ++ show count)
     else return startI
 
 
 -- Convert an instruction index into an expression index
-instIndexToExprIndex :: BNMlilFunctionPtr -> Word64 -> IO CSize
+instIndexToExprIndex :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 
@@ -72,18 +76,16 @@ mlilByIndex func index = do
   ssaFunc <- mlilToSSA func
   alloca $ \p -> do
     _ <- c_BNGetMediumLevelSSAILByIndexPtr p ssaFunc ssaExprIndex
-    if p == nullPtr
-      then error "mlilByIndex: c_BNGetMediumLevelSSAILByIndexPtr failed"
-      else peek p
+    peek p
 
 
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource
-fromRef :: BNReferenceSource -> IO BNMediumLevelILInstruction
+fromRef :: BNReferenceSource -> IO MediumLevelILSSAInstruction
 fromRef ref = do
-  func <- mlil (bnFunc ref)
+  func <- mlilToSSA =<< mlil (bnFunc ref)
   sIndex <- startIndex func (bnArch ref) (bnAddr ref)
-  exprIndex <- instIndexToExprIndex func (fromIntegral sIndex)
-  mlilByIndex func exprIndex
+  exprIndex' <- instIndexToExprIndex func (fromIntegral sIndex)
+  create func exprIndex'
 
 
 foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
@@ -371,7 +373,7 @@ data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
   { instr :: BNMediumLevelILInstruction
   , ilFunc :: BNMlilSSAFunctionPtr
   , exprIndex :: CSize
-  }
+  } deriving (Show)
 
 
 data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
@@ -380,19 +382,20 @@ data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
   , params :: [MediumLevelILSSAInstruction]
   , srcMem :: Int
   , core :: CoreMediumLevelILInstruction
-  }
+  } deriving (Show)
 
 
 data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
   { destMemory :: Int
   , dest :: [BNSSAVariable]
   , core :: CoreMediumLevelILInstruction
-  }
+  } deriving (Show)
 
 
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
+ deriving (Show)
 
 
 create :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction

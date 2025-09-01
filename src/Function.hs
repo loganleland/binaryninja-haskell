@@ -56,7 +56,9 @@ foreign import ccall unsafe "BNGetFunctionSymbol"
 symbol :: BNFunctionPtr -> IO BNSymbolPtr
 symbol func = do
   p <- c_BNGetFunctionSymbol func
-  maybe (error "c_BNGetFunctionSymbol returned null") return (ptrToMaybe p)
+  if p == nullPtr
+  then error "c_BNGetFunctionSymbol returned null"
+  else return p
 
 
 foreign import ccall unsafe "BNWasFunctionAutomaticallyDiscovered"
