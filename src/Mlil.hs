@@ -11,17 +11,17 @@ import Function
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart
-    :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
+    :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILInstructionCount"
   c_BNGetMediumLevelILInstructionCount
-  :: BNMlilSSAFunctionPtr -> IO CSize
+  :: BNMlilFunctionPtr -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
   c_BNGetMediumLevelILIndexForInstruction
-    :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
+    :: BNMlilFunctionPtr -> Word64 -> IO CSize
 
 
 foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
@@ -33,6 +33,7 @@ foreign import ccall unsafe "BNGetMediumLevelSSAILByIndexPtr"
   c_BNGetMediumLevelSSAILByIndexPtr
     :: Ptr BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
 
+
 foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
   c_BNGetMediumLevelILSSAExprIndex
     :: BNMlilFunctionPtr -> CSize -> IO CSize
@@ -40,9 +41,8 @@ foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
 
 -- c_BNMediumLevelILGetInstructionStart is not be well defined
 -- on mlil ssa function pointer. 
-startIndex :: BNMlilSSAFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
+startIndex :: BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
 startIndex func arch addr = do
-  Prelude.print ("[DEBUG] ADDR: " ++ show addr)
   if arch == nullPtr || func == nullPtr 
   then error "startIndex: called with nullPtr argument"
   else do
@@ -56,7 +56,7 @@ startIndex func arch addr = do
 
 
 -- Convert an instruction index into an expression index
-instIndexToExprIndex :: BNMlilSSAFunctionPtr -> Word64 -> IO CSize
+instIndexToExprIndex :: BNMlilFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetMediumLevelILIndexForInstruction
 
 
@@ -82,10 +82,14 @@ mlilByIndex func index = do
 -- Retrieve the best MLIL instruction for the address in BNReferenceSource
 fromRef :: BNReferenceSource -> IO MediumLevelILSSAInstruction
 fromRef ref = do
-  func <- mlilToSSA =<< mlil (bnFunc ref)
+  -- Get mlil (non-ssa) expression index
+  func <- mlil (bnFunc ref)
   sIndex <- startIndex func (bnArch ref) (bnAddr ref)
   exprIndex' <- instIndexToExprIndex func (fromIntegral sIndex)
-  create func exprIndex'
+  -- Convert func and expression index to SSA
+  funcSSA <- mlilToSSA func
+  ssaExprIndex <- c_BNGetMediumLevelILSSAExprIndex func exprIndex'
+  create funcSSA ssaExprIndex
 
 
 foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
