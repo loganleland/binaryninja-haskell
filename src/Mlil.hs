@@ -409,10 +409,16 @@ data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
   } deriving (Show)
 
 
+data MediumLevelILRetRec = MediumLevelILRetRec
+  { src :: [MediumLevelILSSAInstruction]
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
  | MediumLevelILConstPtr MediumLevelILConstPtrRec
+ | MediumLevelILRet MediumLevelILRetRec
  deriving (Show)
 
 
@@ -468,6 +474,11 @@ create func exprIndex'  = do
     MLIL_CONST_PTR -> do
       let rec = MediumLevelILConstPtrRec { constant = fromIntegral $ getOp rawInst 0 }
       return $ MediumLevelILConstPtr rec
+
+    MLIL_RET -> do
+      src <- getExprList func exprIndex' 0
+      let rec = MediumLevelILRetRec { src = src }
+      return $ MediumLevelILRet rec
 
     _ -> error $ ("Unimplemented: " ++ show coreInst)
 
