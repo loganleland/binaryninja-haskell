@@ -211,24 +211,24 @@ instance Storable BNStringRef where
 
 
 data BNVariable = BNVariable
-  { varSourceType   :: !BNVariableSourceType
-  , varRef  :: !CSize
-  , varStorage :: !CInt
+  { varSourceType  :: !BNVariableSourceType
+  , varIndex :: !Word32
+  , varStorage :: !Int64
   } deriving (Eq, Show)
 
 
 instance Storable BNVariable where
-  sizeOf _ = 24
+  sizeOf _ = 16
   alignment _ = Types.alignmentS
   peek ptr = do
     t  <- peekByteOff ptr 0 :: IO Word32
-    r  <- peekByteOff ptr 8  :: IO CSize
-    s  <- peekByteOff ptr 16 :: IO CInt
+    r  <- peekByteOff ptr 4  :: IO Word32
+    s  <- peekByteOff ptr 8 :: IO Int64
     return (BNVariable (toEnum $ fromIntegral t) r s)
   poke ptr (BNVariable t r s) = do
     pokeByteOff ptr 0 $ fromEnum t
-    pokeByteOff ptr 8 r
-    pokeByteOff ptr 16 s
+    pokeByteOff ptr 4 r
+    pokeByteOff ptr 8 s
 
 
 data BNSSAVariable = BNSSAVariable
