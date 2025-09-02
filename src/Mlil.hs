@@ -6,6 +6,7 @@ module Mlil
 
 import Types
 import Function
+import BinaryView
 
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
@@ -325,7 +326,7 @@ getConstraint func inst operand = do
 
 foreign import ccall unsafe "BNGetMediumLevelILBasicBlockList"
   c_BNGetMediumLevelILBasicBlockList
-  :: BNMlilSSAFunctionPtr -> Ptr CSize -> IO (Ptr BNBasicBlockPtr)
+  :: BNMlilFunctionPtr -> Ptr CSize -> IO (Ptr BNBasicBlockPtr)
 
 
 foreign import ccall unsafe "BNFreeBasicBlockList"
@@ -348,33 +349,44 @@ foreign import ccall unsafe "BNGetBasicBlockFunction"
   :: BNBasicBlockPtr -> IO BNFunctionPtr
 
 
-basicBlocks :: BNMlilSSAFunctionPtr -> IO [BNBasicBlockPtr]
+basicBlocks :: BNMlilFunctionPtr -> IO [BNBasicBlockPtr]
 basicBlocks func =
   alloca $ \countPtr -> do
     arrPtr <- c_BNGetMediumLevelILBasicBlockList func countPtr
     count  <- peek countPtr
     if arrPtr == nullPtr || count == 0
-    then return []
+    then error "basicBlocks: arrPtr null or count is 0"
     else do
       refs <- peekArray (fromIntegral count) (castPtr arrPtr :: Ptr BNBasicBlockPtr)
       c_BNFreeBasicBlockList arrPtr count
       return refs
 
 
-blockToInstructions :: BNBasicBlockPtr -> IO [BNMediumLevelILInstruction]
+blockToInstructions :: BNBasicBlockPtr -> IO [MediumLevelILSSAInstruction]
 blockToInstructions block = do
   startExpr <- fromIntegral <$> c_BNGetBasicBlockStart block
   endExpr <- fromIntegral <$> c_BNGetBasicBlockEnd block
   func <- c_BNGetBasicBlockFunction block
   mlilFunc <- mlil func
-  mapM (mlilByIndex mlilFunc) [startExpr .. endExpr-1]
+  mlilSSAFunc <- mlilSSA func
+  exprs <- mapM (instIndexToExprIndex mlilFunc) [startExpr .. endExpr-1]
+  ssaExprs <- mapM (c_BNGetMediumLevelILSSAExprIndex mlilFunc) exprs
+  mapM (create mlilSSAFunc) ssaExprs 
 
 
-instructions :: BNMlilSSAFunctionPtr -> IO [BNMediumLevelILInstruction]
-instructions func = do
+instructionsFromFunc :: BNMlilFunctionPtr -> IO [MediumLevelILSSAInstruction]
+instructionsFromFunc func = do
   blocks <- basicBlocks func
   perBlock <- mapM blockToInstructions blocks
   return $ concat perBlock
+
+
+instructions :: BNBinaryViewPtr -> IO [MediumLevelILSSAInstruction]
+instructions view = do
+  rawFuncs <- BinaryView.functions view
+  mlilFuncs <- mapM mlil rawFuncs
+  allInsts <- mapM instructionsFromFunc mlilFuncs
+  return $ concat allInsts 
 
 
 data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
@@ -467,5 +479,5 @@ create func exprIndex'  = do
       let rec = MediumLevelILConstPtrRec { constant = constant' }
       return $ MediumLevelILConstPtr rec
 
-    _ -> error $ ("Unimplemented: " ++ show (mlOperation rawInst))
+    _ -> error $ ("Unimplemented: " ++ show coreInst)
 

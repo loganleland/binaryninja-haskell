@@ -59,16 +59,14 @@ main = do
   --mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs 
   --Prelude.print mlilSSAInstructions 
 
-  symbolList <- BinaryView.symbols view
-  --mapM_ Symbol.print symbolList
-  stringList <- strings view
-  --mapM_ Prelude.print stringList
-  symCodeRefs <- mapM (Symbol.codeRefs view) symbolList 
-  --Prelude.print symCodeRefs
-  codeRef <- ReferenceSource.codeRefs view 4462920
-  --llils <- mapM Llil.fromRef codeRef
-  mlils <- mapM Mlil.fromRef codeRef
-  mapM_ Prelude.print $ zip codeRef mlils
+  -- Get code refs for address 4462920
+  --codeRef <- ReferenceSource.codeRefs view 4462920
+  --mlils <- mapM Mlil.fromRef codeRef
+  --mapM_ Prelude.print mlils
+  --
+  --
+  allInstructions <- Mlil.instructions view
+  mapM_ Prelude.print allInstructions 
   shutdown
   putStrLn "Shutting Down...."
 
