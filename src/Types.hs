@@ -44,6 +44,7 @@ module Types
   , BNStringRef(..)
   , BNStringRefPtr
   , BNStringType(..)
+  , BNVariableSourceType(..)
   , BNDataBufferPtr
   , BNReferenceSourcePtr
   , BNArchPtr
@@ -210,7 +211,7 @@ instance Storable BNStringRef where
 
 
 data BNVariable = BNVariable
-  { varSourceType   :: !Word32
+  { varSourceType   :: !BNVariableSourceType
   , varRef  :: !CSize
   , varStorage :: !CInt
   } deriving (Eq, Show)
@@ -223,9 +224,9 @@ instance Storable BNVariable where
     t  <- peekByteOff ptr 0 :: IO Word32
     r  <- peekByteOff ptr 8  :: IO CSize
     s  <- peekByteOff ptr 16 :: IO CInt
-    return (BNVariable t r s)
+    return (BNVariable (toEnum $ fromIntegral t) r s)
   poke ptr (BNVariable t r s) = do
-    pokeByteOff ptr 0 t
+    pokeByteOff ptr 0 $ fromEnum t
     pokeByteOff ptr 8 r
     pokeByteOff ptr 16 s
 
@@ -266,6 +267,11 @@ data SymbolBinding = NoBinding | LocalBinding | GlobalBinding | WeakBinding
 
 data BNStringType = AsciiString | Utf16String | Utf32String | Utf8String
   deriving (Eq, Show, Enum)
+
+data BNVariableSourceType = StackVariableSourceType | RegisterVariableSourceType |
+                            FlagVariableSourceType
+  deriving (Eq, Show, Enum)
+
 
 
 data BNLowLevelILInstruction = BNLowLevelILInstruction

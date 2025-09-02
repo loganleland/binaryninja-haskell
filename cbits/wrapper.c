@@ -1,39 +1,30 @@
 #include "binaryninjacore.h"
 
-void BNGetLowLevelILByIndexPtr(BNLowLevelILInstruction* out, BNLowLevelILFunction* func, size_t i)
+void BNGetLowLevelILByIndexPtr(BNLowLevelILInstruction* out,
+                               BNLowLevelILFunction* func, size_t i)
 {
   *out = BNGetLowLevelILByIndex(func, i);
 }
 
 
-void BNGetMediumLevelILByIndexPtr(BNMediumLevelILInstruction* out, BNMediumLevelILFunction* func, size_t i)
+void BNGetMediumLevelILByIndexPtr(BNMediumLevelILInstruction* out,
+                                  BNMediumLevelILFunction* func, size_t i)
 {
   *out = BNGetMediumLevelILByIndex(func, i);
 }
 
 
 void BNGetMediumLevelSSAILByIndexPtr(BNMediumLevelILInstruction* out,
-                                                            BNMediumLevelILFunction* func, size_t i)
+                                     BNMediumLevelILFunction* func, size_t i)
 {
   return BNGetMediumLevelILByIndexPtr(out, func, i);
 }
 
 
-BNVariable* BNFromVariableIdentifierPtr(uint64_t index)
+void BNFromVariableIdentifierPtr(BNVariable* out, uint64_t index)
 {
-  BNVariable tmp = BNFromVariableIdentifier(index);
-  BNVariable* out = (BNVariable*)malloc(sizeof (struct BNVariable));
-  if (!out) return 0;
-  *out = tmp;
-  return out;
+  *out = BNFromVariableIdentifier(index);
 }
-
-
-void freeBNVariable(BNVariable* var)
-{
-  free(var);
-}
-
 
 
 BNPossibleValueSet* BNGetCachedMediumLevelILPossibleValueSetPtr(BNMediumLevelILFunction* func, size_t idx)
