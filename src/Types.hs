@@ -210,7 +210,7 @@ instance Storable BNStringRef where
 
 
 data BNVariable = BNVariable
-  { varSourceType   :: !Word64
+  { varSourceType   :: !Word32
   , varRef  :: !CSize
   , varStorage :: !CInt
   } deriving (Eq, Show)
@@ -220,7 +220,7 @@ instance Storable BNVariable where
   sizeOf _ = 24
   alignment _ = Types.alignmentS
   peek ptr = do
-    t  <- peekByteOff ptr 0 :: IO Word64
+    t  <- peekByteOff ptr 0 :: IO Word32
     r  <- peekByteOff ptr 8  :: IO CSize
     s  <- peekByteOff ptr 16 :: IO CInt
     return (BNVariable t r s)

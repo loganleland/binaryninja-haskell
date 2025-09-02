@@ -136,7 +136,7 @@ getIntList func expr operand =
 
 foreign import ccall unsafe "BNFromVariableIdentifierPtr"
   c_BNFromVariableIdentifierPtr
-    :: CULLong -> IO (Ptr BNVariable)
+    :: Ptr BNVariable -> CULLong -> IO ()
 
 
 foreign import ccall unsafe "freeBNVariable"
@@ -145,11 +145,10 @@ foreign import ccall unsafe "freeBNVariable"
 
 
 varFromID :: CULLong -> IO BNVariable
-varFromID index = do
-  rawPtr <- c_BNFromVariableIdentifierPtr index
-  val <- peek rawPtr
-  c_freeBNVariable rawPtr
-  return val
+varFromID index =
+  alloca $ \p -> do
+    _ <- c_BNFromVariableIdentifierPtr p index
+    peek p
 
 
 getVarList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [BNVariable]
@@ -183,35 +182,14 @@ getSSAVarList func expr operand =
     return result
 
 
-getVar :: BNMediumLevelILInstruction -> Int -> IO BNVariable
-getVar inst index = varFromID value
-  where
-  value = case index of
-          0 -> mlOp0 inst
-          1 -> mlOp1 inst
-          2 -> mlOp2 inst
-          3 -> mlOp3 inst
-          4 -> mlOp4 inst
-          _ -> error $ "getVar: " ++ show index ++ " not in [0, .., 4]"
+getSSAVar :: BNMediumLevelILInstruction -> CSize -> CSize -> IO BNSSAVariable
+getSSAVar inst varOP version' = do
+  rawVar <- varFromID $ fromIntegral $ getOp inst varOP
+  return $ BNSSAVariable rawVar $ fromIntegral $ getOp inst version'
 
 
-getSSAVar :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
-getSSAVar inst indexVar indexVersion = do
-  rawVar <- getVar inst indexVar
-  return $ BNSSAVariable rawVar version
-  where
-    version = fromIntegral $ case indexVersion of
-                             0 -> mlOp0 inst
-                             1 -> mlOp1 inst
-                             2 -> mlOp2 inst
-                             3 -> mlOp3 inst
-                             4 -> mlOp4 inst
-                             _ -> error $ "getSSAVar: " ++ show indexVersion ++
-                              " not in [0, .., 4]"
-
-
-getSSAVarAndDest :: BNMediumLevelILInstruction -> Int -> Int -> IO BNSSAVariable
-getSSAVarAndDest = getSSAVar 
+--getSSAVarAndDest :: BNMediumLevelILInstruction -> CSize -> CSize -> IO BNSSAVariable
+--getSSAVarAndDest = getSSAVar 
 
 
 getFloat :: BNMediumLevelILInstruction -> Int -> Double
@@ -414,11 +392,19 @@ data MediumLevelILRetRec = MediumLevelILRetRec
   } deriving (Show)
 
 
+data MediumLevelILVarSsaRec = MediumLevelILVarSsaRec
+  { src :: BNSSAVariable
+  , var :: BNSSAVariable
+  } deriving (Show)
+
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
  | MediumLevelILConstPtr MediumLevelILConstPtrRec
  | MediumLevelILRet MediumLevelILRetRec
+ | MediumLevelILVarSsa MediumLevelILVarSsaRec
  deriving (Show)
 
 
@@ -476,9 +462,15 @@ create func exprIndex'  = do
       return $ MediumLevelILConstPtr rec
 
     MLIL_RET -> do
-      src <- getExprList func exprIndex' 0
-      let rec = MediumLevelILRetRec { src = src }
+      src' <- getExprList func exprIndex' 0
+      let rec = MediumLevelILRetRec { src = src' }
       return $ MediumLevelILRet rec
+
+    MLIL_VAR_SSA -> do
+      src <- getSSAVar rawInst 0 1
+      let rec = MediumLevelILVarSsaRec { src = src, var = src }
+      Prelude.print $ show rec
+      return $ MediumLevelILVarSsa rec
 
     _ -> error $ ("Unimplemented: " ++ show coreInst)
 
