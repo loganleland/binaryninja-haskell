@@ -469,7 +469,6 @@ create func exprIndex'  = do
     MLIL_VAR_SSA -> do
       src <- getSSAVar rawInst 0 1
       let rec = MediumLevelILVarSsaRec { src = src, var = src }
-      Prelude.print $ show rec
       return $ MediumLevelILVarSsa rec
 
     _ -> error $ ("Unimplemented: " ++ show coreInst)
