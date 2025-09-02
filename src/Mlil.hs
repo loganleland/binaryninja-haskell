@@ -102,7 +102,7 @@ foreign import ccall unsafe "BNMediumLevelILGetOperandList"
     :: BNMlilSSAFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
 
 
-getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [CSize]
+getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [MediumLevelILSSAInstruction]
 getExprList func expr operand =
   alloca $ \countPtr -> do
     rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
@@ -111,35 +111,27 @@ getExprList func expr operand =
       then return []
       else peekArray count rawPtr
     when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
-    return $ map fromIntegral xs
+    mapM (create func . fromIntegral) xs
 
 
 getExpr :: BNMlilSSAFunctionPtr -> CSize -> IO MediumLevelILSSAInstruction
 getExpr = create
 
 
-getInt :: BNMediumLevelILInstruction -> Int -> IO Int
-getInt inst index =
-  return (fromIntegral value :: Int)
-  where
-  value = case index of
-          0 -> mlOp0 inst
-          1 -> mlOp1 inst
-          2 -> mlOp2 inst
-          3 -> mlOp3 inst
-          4 -> mlOp4 inst
-          _ -> error $ "getInt: " ++ show index ++ " not in [0, .., 4]"
+getInt :: BNMediumLevelILInstruction -> CSize -> IO Int
+getInt inst operand = return $ fromIntegral $ getOp inst operand 
 
 
 getIntList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [Int]
-getIntList func expr operand = do
-  cSizeList <- getExprList func expr operand   
-  return $ map fromIntegral cSizeList 
-
-getInstList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [BNMediumLevelILInstruction]
-getInstList func expr operand = do
-  indexList <- getExprList func expr operand
-  mapM (mlilSSAByIndex func . fromIntegral) indexList
+getIntList func expr operand =
+  alloca $ \countPtr -> do
+    rawPtr <- c_BNMediumLevelILGetOperandList func expr operand countPtr
+    count  <- fromIntegral <$> peek countPtr
+    xs <- if rawPtr == nullPtr || count == 0
+      then return []
+      else peekArray count rawPtr
+    when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
+    return $ map fromIntegral xs
 
 
 foreign import ccall unsafe "BNFromVariableIdentifierPtr"
@@ -452,8 +444,7 @@ create func exprIndex'  = do
                   "create: Output of MediumLevelILCallSsa: expected MediumLevelILCallOutputSsa : "
                   ++ show outputInst
       dest <- getExpr func $ getOp rawInst 1
-      paramExprs <- getExprList func (getOp rawInst 2) (getOp rawInst 3)
-      params <- mapM (getExpr func . getOp rawInst) paramExprs 
+      params <- getExprList func exprIndex' 2
       srcMem <- getInt rawInst 4
       let rec = MediumLevelILCallSsaRec
              { output = output
@@ -475,8 +466,7 @@ create func exprIndex'  = do
       return $ MediumLevelILCallOutputSsa rec
 
     MLIL_CONST_PTR -> do
-      constant' <- getInt rawInst 0
-      let rec = MediumLevelILConstPtrRec { constant = constant' }
+      let rec = MediumLevelILConstPtrRec { constant = fromIntegral $ getOp rawInst 0 }
       return $ MediumLevelILConstPtr rec
 
     _ -> error $ ("Unimplemented: " ++ show coreInst)
