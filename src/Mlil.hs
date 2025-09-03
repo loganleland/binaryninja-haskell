@@ -464,6 +464,20 @@ data MediumLevelILCmpERec = MediumLevelILCmpERec
   } deriving (Show)
 
 
+data MediumLevelILNoRetRec = MediumLevelILNoRetRec
+  { core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILStoreSsaRec = MediumLevelILStoreSsaRec
+  { dest :: MediumLevelILSSAInstruction
+  , destMemory :: Int
+  , srcMemory :: Int
+  , src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -479,6 +493,8 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILConst MediumLevelILConstRec
  | MediumLevelILIf MediumLevelILIfRec
  | MediumLevelILCmpE MediumLevelILCmpERec
+ | MediumLevelILNoRet MediumLevelILNoRetRec
+ | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
  deriving (Show)
 
 
@@ -655,7 +671,7 @@ create func exprIndex'  = do
                 }
       return $ MediumLevelILRet rec
     MLIL_NORET -> do
-       error $ ("Unimplemented: " ++ show "MLIL_NORET")
+      return $ MediumLevelILNoRet $ MediumLevelILNoRetRec { core = coreInst }
     MLIL_IF -> do
       condition' <- getExpr func $ getOp rawInst 0
       true' <- getInt rawInst 1
@@ -880,7 +896,18 @@ create func exprIndex'  = do
     MLIL_LOAD_STRUCT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_LOAD_STRUCT_SSA")
     MLIL_STORE_SSA -> do
-       error $ ("Unimplemented: " ++ show "MLIL_STORE_SSA")
+      dest' <- getExpr func $ getOp rawInst 0
+      destMemory' <- getInt rawInst 1
+      srcMemory' <- getInt rawInst 2
+      src' <- getExpr func $ getOp rawInst 3
+      let rec = MediumLevelILStoreSsaRec
+                { dest = dest'
+                , destMemory = destMemory'
+                , srcMemory = srcMemory'
+                , src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILStoreSsa rec
     MLIL_STORE_STRUCT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_STORE_STRUCT_SSA")
     MLIL_INTRINSIC_SSA -> do
