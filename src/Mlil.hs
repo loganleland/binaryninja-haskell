@@ -449,6 +449,21 @@ data MediumLevelILLoadSsaRec = MediumLevelILLoadSsaRec
   } deriving (Show)
 
 
+data MediumLevelILIfRec = MediumLevelILIfRec
+  { condition :: MediumLevelILSSAInstruction
+  , true :: Int -- Instruction Index
+  , false :: Int -- Instruction Index
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILCmpERec = MediumLevelILCmpERec
+  { left :: MediumLevelILSSAInstruction
+  , right :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -462,6 +477,8 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILAddressOf MediumLevelILAddressOfRec
  | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
  | MediumLevelILConst MediumLevelILConstRec
+ | MediumLevelILIf MediumLevelILIfRec
+ | MediumLevelILCmpE MediumLevelILCmpERec
  deriving (Show)
 
 
@@ -640,11 +657,27 @@ create func exprIndex'  = do
     MLIL_NORET -> do
        error $ ("Unimplemented: " ++ show "MLIL_NORET")
     MLIL_IF -> do
-       error $ ("Unimplemented: " ++ show "MLIL_IF")
+      condition' <- getExpr func $ getOp rawInst 0
+      true' <- getInt rawInst 1
+      false' <- getInt rawInst 2
+      let rec = MediumLevelILIfRec
+                { condition = condition'
+                , true = true'
+                , false = false'
+                , core = coreInst
+                }
+      return $ MediumLevelILIf rec
     MLIL_GOTO -> do
        error $ ("Unimplemented: " ++ show "MLIL_GOTO")
     MLIL_CMP_E -> do
-       error $ ("Unimplemented: " ++ show "MLIL_CMP_E")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILCmpERec
+                { left = left'
+                , right = right'
+                , core = coreInst
+                }
+      return $ MediumLevelILCmpE rec
     MLIL_CMP_NE -> do
        error $ ("Unimplemented: " ++ show "MLIL_CMP_NE")
     MLIL_CMP_SLT -> do
