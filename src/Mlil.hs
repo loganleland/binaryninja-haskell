@@ -499,6 +499,13 @@ data MediumLevelILGotoRec = MediumLevelILGotoRec
   } deriving (Show)
 
 
+data MediumLevelILAddRec = MediumLevelILAddRec
+  { left :: MediumLevelILSSAInstruction
+  , right :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -519,6 +526,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILSetVarSsaField MediumLevelILSetVarSsaFieldRec
  | MediumLevelILVarSsaField MediumLevelILVarSsaFieldRec
  | MediumLevelILGoto MediumLevelILGotoRec
+ | MediumLevelILAdd MediumLevelILAddRec
  deriving (Show)
 
 
@@ -605,7 +613,15 @@ create func exprIndex'  = do
                 }
       return $ MediumLevelILImport rec
     MLIL_ADD -> do
-       error $ ("Unimplemented: " ++ show "MLIL_ADD")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec = MediumLevelILAddRec
+                { left = left'
+                , right = right'
+                , core = coreInst
+                }
+      Prelude.print rec
+      return $ MediumLevelILAdd rec
     MLIL_ADC -> do
        error $ ("Unimplemented: " ++ show "MLIL_ADC")
     MLIL_SUB -> do
@@ -716,7 +732,7 @@ create func exprIndex'  = do
       return $ MediumLevelILGoto rec
     MLIL_CMP_E -> do
       left' <- getExpr func $ getOp rawInst 0
-      right' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
       let rec = MediumLevelILCmpERec
                 { left = left'
                 , right = right'
