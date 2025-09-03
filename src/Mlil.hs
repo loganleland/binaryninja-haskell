@@ -806,7 +806,7 @@ create func exprIndex'  = do
        error $ ("Unimplemented: " ++ show "MLIL_CALL_PARAM_SSA")
     MLIL_CALL_OUTPUT_SSA -> do
       destMemory <- getInt rawInst 0
-      dest <- getSSAVarList func 1 2
+      dest <- getSSAVarList func exprIndex' 1
       let rec = MediumLevelILCallOutputSsaRec
                 { destMemory = destMemory
                 , dest = dest
