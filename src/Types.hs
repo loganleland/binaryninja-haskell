@@ -138,7 +138,7 @@ type TargetMap = [(CULLong, CULLong)]
 
 
 data ILIntrinsic = ILIntrinsic
-  { intrinsicIndex :: !CULLong
+  { intrinsicIndex :: !Word64
   , intrinsicArch :: !BNArchPtr
   }
 
@@ -268,10 +268,10 @@ data SymbolBinding = NoBinding | LocalBinding | GlobalBinding | WeakBinding
 data BNStringType = AsciiString | Utf16String | Utf32String | Utf8String
   deriving (Eq, Show, Enum)
 
+
 data BNVariableSourceType = StackVariableSourceType | RegisterVariableSourceType |
                             FlagVariableSourceType
   deriving (Eq, Show, Enum)
-
 
 
 data BNLowLevelILInstruction = BNLowLevelILInstruction
@@ -327,14 +327,14 @@ data BNMediumLevelILOperation =  MLIL_NOP | MLIL_SET_VAR | MLIL_SET_VAR_FIELD | 
 data BNMediumLevelILInstruction = BNMediumLevelILInstruction
   { mlOperation     :: !BNMediumLevelILOperation
   , mlAttributes    :: !Word32
-  , mlSourceOperand :: !CUInt
+  , mlSourceOperand :: !Word32
   , mlSize          :: !CSize
-  , mlOp0           :: !CULLong
-  , mlOp1           :: !CULLong
-  , mlOp2           :: !CULLong
-  , mlOp3           :: !CULLong
-  , mlOp4           :: !CULLong
-  , mlAddress       :: !CULLong
+  , mlOp0           :: !Word64
+  , mlOp1           :: !Word64
+  , mlOp2           :: !Word64
+  , mlOp3           :: !Word64
+  , mlOp4           :: !Word64
+  , mlAddress       :: !Word64
   } deriving (Eq, Show)
 
 
@@ -343,15 +343,15 @@ instance Storable BNMediumLevelILInstruction where
   alignment _ = Types.alignmentS
   peek ptr = do
     op <- peekByteOff ptr 0 :: IO Word32
-    attr <- peekByteOff ptr 4
-    srcOp <- peekByteOff ptr 8
-    sz <- peekByteOff ptr 16
-    o0 <- peekByteOff ptr 24
-    o1 <- peekByteOff ptr 32
-    o2 <- peekByteOff ptr 40
-    o3 <- peekByteOff ptr 48
-    o4 <- peekByteOff ptr 56
-    addr <- peekByteOff ptr 64
+    attr <- peekByteOff ptr 4 :: IO Word32
+    srcOp <- peekByteOff ptr 8 :: IO Word32
+    sz <- peekByteOff ptr 16 :: IO CSize
+    o0 <- peekByteOff ptr 24 :: IO Word64
+    o1 <- peekByteOff ptr 32 :: IO Word64
+    o2 <- peekByteOff ptr 40 :: IO Word64
+    o3 <- peekByteOff ptr 48 :: IO Word64
+    o4 <- peekByteOff ptr 56 :: IO Word64
+    addr <- peekByteOff ptr 64 :: IO Word64
     return (BNMediumLevelILInstruction (toEnum $ fromIntegral op) attr srcOp sz o0 o1 o2 o3 o4 addr)
   poke ptr (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr) = do
     pokeByteOff ptr 0 $ fromEnum op

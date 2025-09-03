@@ -213,8 +213,8 @@ getFloat inst index =
 foreign import ccall unsafe "BNGetConstantData"
   c_BNGetConstantData
     :: BNFunctionPtr
-    -> CULLong
-    -> CULLong
+    -> Word64
+    -> Word64
     -> CSize
     -> Ptr CInt
     -> IO BNDataBufferPtr
@@ -370,7 +370,7 @@ data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
   { output :: [BNSSAVariable]
   , dest :: MediumLevelILSSAInstruction
   , params :: [MediumLevelILSSAInstruction]
-  , srcMem :: Int
+  , srcMemory :: Int
   , core :: CoreMediumLevelILInstruction
   } deriving (Show)
 
@@ -408,6 +408,34 @@ data MediumLevelILSetVarSsaRec = MediumLevelILSetVarSsaRec
   } deriving (Show)
 
 
+data MediumLevelILJumpRec = MediumLevelILJumpRec
+  { dest :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILTailcallSsaRec = MediumLevelILTailcallSsaRec
+  { output :: [BNSSAVariable]
+  , outputDestMemory :: Int
+  , dest :: MediumLevelILSSAInstruction
+  , params :: [MediumLevelILSSAInstruction]
+  , srcMemory :: Int
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILImportRec = MediumLevelILImportRec
+  { constant :: Int
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILAddressOfRec = MediumLevelILAddressOfRec
+  { src :: BNVariable
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -415,6 +443,10 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILRet MediumLevelILRetRec
  | MediumLevelILVarSsa MediumLevelILVarSsaRec
  | MediumLevelILSetVarSsa MediumLevelILSetVarSsaRec
+ | MediumLevelILJump MediumLevelILJumpRec
+ | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
+ | MediumLevelILImport MediumLevelILImportRec
+ | MediumLevelILAddressOf MediumLevelILAddressOfRec
  deriving (Show)
 
 
@@ -437,7 +469,6 @@ create func exprIndex'  = do
              , ilFunc = func
              , exprIndex = exprIndex'
              }
-
   case mlOperation rawInst of
     MLIL_NOP -> do
        error $ ("Unimplemented: " ++ show "MLIL_NOP")
@@ -466,7 +497,12 @@ create func exprIndex'  = do
     MLIL_VAR_SPLIT -> do
        error $ ("Unimplemented: " ++ show "MLIL_VAR_SPLIT")
     MLIL_ADDRESS_OF -> do
-       error $ ("Unimplemented: " ++ show "MLIL_ADDRESS_OF")
+      src' <- varFromID $ fromIntegral $ getOp rawInst 0
+      let rec = MediumLevelILAddressOfRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILAddressOf rec
     MLIL_ADDRESS_OF_FIELD -> do
        error $ ("Unimplemented: " ++ show "MLIL_ADDRESS_OF_FIELD")
     MLIL_CONST -> do
@@ -474,8 +510,9 @@ create func exprIndex'  = do
     MLIL_CONST_DATA -> do
        error $ ("Unimplemented: " ++ show "MLIL_CONST_DATA")
     MLIL_CONST_PTR -> do
+      constant' <- getInt rawInst 0
       let rec = MediumLevelILConstPtrRec
-                { constant = fromIntegral $ getOp rawInst 0
+                { constant = constant'
                 , core = coreInst
                 }
       return $ MediumLevelILConstPtr rec
@@ -484,7 +521,12 @@ create func exprIndex'  = do
     MLIL_FLOAT_CONST -> do
        error $ ("Unimplemented: " ++ show "MLIL_FLOAT_CONST")
     MLIL_IMPORT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_IMPORT")
+      constant' <- getInt rawInst 0
+      let rec = MediumLevelILImportRec
+                { constant = constant'
+                , core = coreInst
+                }
+      return $ MediumLevelILImport rec
     MLIL_ADD -> do
        error $ ("Unimplemented: " ++ show "MLIL_ADD")
     MLIL_ADC -> do
@@ -546,7 +588,12 @@ create func exprIndex'  = do
     MLIL_LOW_PART -> do
        error $ ("Unimplemented: " ++ show "MLIL_LOW_PART")
     MLIL_JUMP -> do
-       error $ ("Unimplemented: " ++ show "MLIL_JUMP")
+      dest' <- getExpr func $ getOp rawInst 1
+      let rec = MediumLevelILJumpRec
+                { dest = dest'
+                , core = coreInst
+                }
+      return $ MediumLevelILJump rec
     MLIL_JUMP_TO -> do
        error $ ("Unimplemented: " ++ show "MLIL_JUMP_TO")
     MLIL_RET_HINT -> do
@@ -714,14 +761,14 @@ create func exprIndex'  = do
                   ++ show outputInst
       dest <- getExpr func $ getOp rawInst 1
       params <- getExprList func exprIndex' 2
-      srcMem <- getInt rawInst 4
+      srcMemory' <- getInt rawInst 4
       let rec = MediumLevelILCallSsaRec
-             { output = output
-             , dest = dest
-             , params = params
-             , srcMem = srcMem
-             , core = coreInst
-             }
+                { output = output
+                , dest = dest
+                , params = params
+                , srcMemory = srcMemory'
+                , core = coreInst
+                }
       return $ MediumLevelILCallSsa rec
     MLIL_CALL_UNTYPED_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_CALL_UNTYPED_SSA")
@@ -730,7 +777,29 @@ create func exprIndex'  = do
     MLIL_SYSCALL_UNTYPED_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_SYSCALL_UNTYPED_SSA")
     MLIL_TAILCALL_SSA -> do
-       error $ ("Unimplemented: " ++ show "MLIL_TAILCALL_SSA")
+      outputInst <- getExpr func $ getOp rawInst 0
+      output' <- case outputInst of
+                MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec{ dest = d }) -> return d
+                _ -> error $
+                  "create: Output of MediumLevelILTailcallSsa: expected MediumLevelILCallOutputSsa : "
+                  ++ show outputInst
+      outputDestMemory' <- case outputInst of
+                MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec{ destMemory = dM }) -> return dM
+                _ -> error $
+                  "create: Output of MediumLevelILTailcallSsa: expected MediumLevelILCallOutputSsa : "
+                  ++ show outputInst
+      dest' <- getExpr func $ getOp rawInst 1
+      params' <- getExprList func exprIndex' 2
+      srcMemory' <- getInt rawInst 4
+      let rec = MediumLevelILTailcallSsaRec
+                { output = output'
+                , outputDestMemory = outputDestMemory' 
+                , dest = dest'
+                , params = params'
+                , srcMemory = srcMemory'
+                , core = coreInst
+                }
+      return $ MediumLevelILTailcallSsa rec
     MLIL_TAILCALL_UNTYPED_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_TAILCALL_UNTYPED_SSA")
     MLIL_CALL_PARAM_SSA -> do
@@ -739,10 +808,10 @@ create func exprIndex'  = do
       destMemory <- getInt rawInst 0
       dest <- getSSAVarList func 1 2
       let rec = MediumLevelILCallOutputSsaRec
-             { destMemory = destMemory
-             , dest = dest
-             , core = coreInst
-             }
+                { destMemory = destMemory
+                , dest = dest
+                , core = coreInst
+                }
       return $ MediumLevelILCallOutputSsa rec
     MLIL_MEMORY_INTRINSIC_OUTPUT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_OUTPUT_SSA")
@@ -764,5 +833,5 @@ create func exprIndex'  = do
        error $ ("Unimplemented: " ++ show "MLIL_VAR_PHI")
     MLIL_MEM_PHI -> do
        error $ ("Unimplemented: " ++ show "MLIL_MEM_PHI")
-    _ -> error $ ("Unknown instruction type: " ++ show rawInst)
+    _ -> error $ "Unknown instruction type: " ++ show rawInst
 
