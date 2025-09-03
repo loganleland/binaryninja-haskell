@@ -436,6 +436,13 @@ data MediumLevelILAddressOfRec = MediumLevelILAddressOfRec
   } deriving (Show)
 
 
+data MediumLevelILLoadSsaRec = MediumLevelILLoadSsaRec
+  { src :: MediumLevelILSSAInstruction
+  , srcMemory :: Int
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -447,6 +454,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
  | MediumLevelILImport MediumLevelILImportRec
  | MediumLevelILAddressOf MediumLevelILAddressOfRec
+ | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
  deriving (Show)
 
 
@@ -816,7 +824,14 @@ create func exprIndex'  = do
     MLIL_MEMORY_INTRINSIC_OUTPUT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_OUTPUT_SSA")
     MLIL_LOAD_SSA -> do
-       error $ ("Unimplemented: " ++ show "MLIL_LOAD_SSA")
+      src' <- getExpr func $ getOp rawInst 0
+      srcMemory' <- getInt rawInst 1
+      let rec = MediumLevelILLoadSsaRec
+                { src=src'
+                , srcMemory=srcMemory'
+                , core=coreInst
+                }
+      return $ MediumLevelILLoadSsa rec
     MLIL_LOAD_STRUCT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_LOAD_STRUCT_SSA")
     MLIL_STORE_SSA -> do
