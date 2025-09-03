@@ -188,8 +188,8 @@ getSSAVar inst varOP version' = do
   return $ BNSSAVariable rawVar $ fromIntegral $ getOp inst version'
 
 
---getSSAVarAndDest :: BNMediumLevelILInstruction -> CSize -> CSize -> IO BNSSAVariable
---getSSAVarAndDest = getSSAVar 
+getSSAVarAndDest :: BNMediumLevelILInstruction -> CSize -> CSize -> IO BNSSAVariable
+getSSAVarAndDest = getSSAVar 
 
 
 getFloat :: BNMediumLevelILInstruction -> Int -> Double
@@ -478,6 +478,15 @@ data MediumLevelILStoreSsaRec = MediumLevelILStoreSsaRec
   } deriving (Show)
 
 
+data MediumLevelILSetVarSsaFieldRec = MediumLevelILSetVarSsaFieldRec
+  { dest :: BNSSAVariable
+  , prev :: BNSSAVariable
+  , offset :: Int
+  , src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -495,6 +504,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILCmpE MediumLevelILCmpERec
  | MediumLevelILNoRet MediumLevelILNoRetRec
  | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
+ | MediumLevelILSetVarSsaField MediumLevelILSetVarSsaFieldRec
  deriving (Show)
 
 
@@ -794,7 +804,18 @@ create func exprIndex'  = do
                 }
       return $ MediumLevelILSetVarSsa rec
     MLIL_SET_VAR_SSA_FIELD -> do
-       error $ ("Unimplemented: " ++ show "MLIL_SET_VAR_SSA_FIELD")
+      dest' <- getSSAVarAndDest rawInst 0 1
+      prev' <- getSSAVarAndDest rawInst 0 2
+      offset' <- getInt rawInst 3
+      src' <- getExpr func $ getOp rawInst 4
+      let rec = MediumLevelILSetVarSsaFieldRec
+                { dest = dest'
+                , prev = prev'
+                , offset = offset'
+                , src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILSetVarSsaField rec
     MLIL_SET_VAR_SPLIT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_SET_VAR_SPLIT_SSA")
     MLIL_SET_VAR_ALIASED -> do
