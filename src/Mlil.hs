@@ -388,6 +388,12 @@ data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
   } deriving (Show)
 
 
+data MediumLevelILConstRec = MediumLevelILConstRec
+  { constant :: Int
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILRetRec = MediumLevelILRetRec
   { src :: [MediumLevelILSSAInstruction]
   , core :: CoreMediumLevelILInstruction
@@ -455,6 +461,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILImport MediumLevelILImportRec
  | MediumLevelILAddressOf MediumLevelILAddressOfRec
  | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
+ | MediumLevelILConst MediumLevelILConstRec
  deriving (Show)
 
 
@@ -514,7 +521,12 @@ create func exprIndex'  = do
     MLIL_ADDRESS_OF_FIELD -> do
        error $ ("Unimplemented: " ++ show "MLIL_ADDRESS_OF_FIELD")
     MLIL_CONST -> do
-       error $ ("Unimplemented: " ++ show "MLIL_CONST")
+      constant' <- getInt rawInst 0
+      let rec = MediumLevelILConstRec
+                { constant = constant'
+                , core = coreInst
+                }
+      return $ MediumLevelILConst rec
     MLIL_CONST_DATA -> do
        error $ ("Unimplemented: " ++ show "MLIL_CONST_DATA")
     MLIL_CONST_PTR -> do
