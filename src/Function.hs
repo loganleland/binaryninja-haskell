@@ -17,6 +17,7 @@ module Function (
   , Function.mlil
   , Function.mlilToSSA
   , Function.mlilSSA
+  , Function.mlilToRawFunction
   , Function.print
   ) where
 
@@ -147,6 +148,18 @@ foreign import ccall unsafe "BNGetFunctionMediumLevelIL"
 
 foreign import ccall unsafe "BNGetMediumLevelILSSAForm"
   c_BNGetMediumLevelILSSAForm :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
+
+
+foreign import ccall unsafe "BNGetMediumLevelILOwnerFunction"
+  c_BNGetMediumLevelILOwnerFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
+
+
+mlilToRawFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
+mlilToRawFunction func = do
+  rawFunc <- c_BNGetMediumLevelILOwnerFunction func
+  if rawFunc == nullPtr
+  then error "mlilToRawFunction: BNGetMediumLevelILOwnerFunction returned null"
+  else return rawFunc
 
 
 mlil :: BNFunctionPtr -> IO BNMlilFunctionPtr

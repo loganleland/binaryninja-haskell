@@ -138,9 +138,9 @@ type TargetMap = [(CULLong, CULLong)]
 
 
 data ILIntrinsic = ILIntrinsic
-  { intrinsicIndex :: !Word64
+  { intrinsicIndex :: !CSize
   , intrinsicArch :: !BNArchPtr
-  }
+  } deriving (Show)
 
 
 data BNPossibleValueSet = BNPossibleValueSet
@@ -152,7 +152,7 @@ data BNPossibleValueSet = BNPossibleValueSet
   , pvsValueSet :: !(Ptr CInt)
   , pvsLookupTbl :: !BNLookupTableEntryPtr
   , pvsCount :: !CSize
-  }
+  } deriving (Show)
 
 
 instance Storable BNPossibleValueSet where

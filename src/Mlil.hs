@@ -258,16 +258,12 @@ getTargetMap func expr operand =
     return pairs
 
 
-getIntrinsic :: BNMediumLevelILInstruction -> BNArchPtr -> Int -> IO ILIntrinsic
-getIntrinsic inst arch operand = return $ ILIntrinsic intrinsicIndex arch
-  where
-    intrinsicIndex = case operand of
-                     0 -> mlOp0 inst
-                     1 -> mlOp1 inst
-                     2 -> mlOp2 inst
-                     3 -> mlOp3 inst
-                     4 -> mlOp4 inst
-                     _ -> error $ "getIntrinsic: " ++ show operand ++ " not in [0, .., 4]"
+-- Likely the intrinsic type should actually just be a
+-- name (string) and enum for architecture
+getIntrinsic :: BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO ILIntrinsic
+getIntrinsic inst func operand = do
+  rawFunc <- Function.mlilToRawFunction func
+  return $ ILIntrinsic (getOp inst operand) (architecture rawFunc)
 
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
@@ -822,6 +818,14 @@ data MediumLevelILJumpToRec = MediumLevelILJumpToRec
   } deriving (Show)
 
 
+data MediumLevelILIntrinsicSsaRec = MediumLevelILIntrinsicSsaRec
+  { output :: [BNSSAVariable]
+  , intrinsic :: ILIntrinsic
+  , params :: [MediumLevelILSSAInstruction]
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -889,6 +893,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILRoundToInt MediumLevelILRoundToIntRec
  | MediumLevelILFloor MediumLevelILFloorRec
  | MediumLevelILFtrunc MediumLevelILFtruncRec
+ | MediumLevelILIntrinsicSsa MediumLevelILIntrinsicSsaRec
  deriving (Show)
 
 
@@ -1629,7 +1634,17 @@ create func exprIndex'  = do
     MLIL_STORE_STRUCT_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_STORE_STRUCT_SSA")
     MLIL_INTRINSIC_SSA -> do
-       error $ ("Unimplemented: " ++ show "MLIL_INTRINSIC_SSA")
+      output' <- getSSAVarList func exprIndex' 0
+      intrinsic' <- getIntrinsic rawInst func 2
+      params' <- getExprList func exprIndex' 3
+      let rec = MediumLevelILIntrinsicSsaRec
+                { output = output'
+                , intrinsic = intrinsic'
+                , params = params'
+                , core = coreInst
+                }
+      Prelude.print rec
+      return $ MediumLevelILIntrinsicSsa rec 
     MLIL_MEMORY_INTRINSIC_SSA -> do
        error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_SSA")
     MLIL_FREE_VAR_SLOT_SSA -> do
