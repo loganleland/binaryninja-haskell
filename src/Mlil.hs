@@ -258,25 +258,12 @@ getTargetMap func expr operand =
     return pairs
 
 
-foreign import ccall unsafe "BNGetArchitectureName"
-  c_BNGetArchitectureName
-  :: BNArchPtr -> IO CString
-
-
-getArchName :: BNArchPtr -> IO String
-getArchName arch = do
-  cStr <- c_BNGetArchitectureName arch
-  peekCString cStr
-
-
--- Likely the intrinsic type should actually just be a
--- name (string) and enum for architecture
 getIntrinsic :: BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO ILIntrinsic
 getIntrinsic inst func operand = do
   rawFunc <- Function.mlilToRawFunction func
   let arch = architecture rawFunc
-  name' <- getArchName arch
-  return $ ILIntrinsic (getOp inst operand) arch name'
+  archTy <- getArch arch
+  return $ ILIntrinsic (getOp inst operand) arch archTy
 
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
