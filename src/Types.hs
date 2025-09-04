@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 module Types
   ( CSize(..)
   , CBool(..)
@@ -140,6 +141,7 @@ type TargetMap = [(CULLong, CULLong)]
 data ILIntrinsic = ILIntrinsic
   { intrinsicIndex :: !CSize
   , intrinsicArch :: !BNArchPtr
+  , nameArch :: String
   } deriving (Show)
 
 
