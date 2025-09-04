@@ -792,6 +792,25 @@ data MediumLevelILIntrinsicSsaRec = MediumLevelILIntrinsicSsaRec
   }
   deriving (Show)
 
+data MediumLevelILBoolToIntRec = MediumLevelILBoolToIntRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarAliasedRec = MediumLevelILVarAliasedRec
+  { src :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarAliasedFieldRec = MediumLevelILVarAliasedFieldRec
+  { src :: BNSSAVariable,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -860,6 +879,9 @@ data MediumLevelILSSAInstruction
   | MediumLevelILFloor MediumLevelILFloorRec
   | MediumLevelILFtrunc MediumLevelILFtruncRec
   | MediumLevelILIntrinsicSsa MediumLevelILIntrinsicSsaRec
+  | MediumLevelILBoolToInt MediumLevelILBoolToIntRec
+  | MediumLevelILVarAliased MediumLevelILVarAliasedRec
+  | MediumLevelILVarAliasedField MediumLevelILVarAliasedFieldRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -1371,7 +1393,13 @@ create func exprIndex' = do
     MLIL_TEST_BIT -> do
       error $ ("Unimplemented: " ++ show "MLIL_TEST_BIT")
     MLIL_BOOL_TO_INT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_BOOL_TO_INT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec =
+            MediumLevelILBoolToIntRec
+              { src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILBoolToInt rec
     MLIL_ADD_OVERFLOW -> do
       error $ ("Unimplemented: " ++ show "MLIL_ADD_OVERFLOW")
     MLIL_SYSCALL -> do
@@ -1560,9 +1588,24 @@ create func exprIndex' = do
               }
       return $ MediumLevelILVarSsaField rec
     MLIL_VAR_ALIASED -> do
-      error $ ("Unimplemented: " ++ show "MLIL_VAR_ALIASED")
+      src' <- getSSAVar rawInst 0 1
+      let rec =
+            MediumLevelILVarAliasedRec
+              { src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILVarAliased rec
     MLIL_VAR_ALIASED_FIELD -> do
-      error $ ("Unimplemented: " ++ show "MLIL_VAR_ALIASED_FIELD")
+      src' <- getSSAVar rawInst 0 1
+      offset' <- getInt rawInst 2
+      let rec =
+            MediumLevelILVarAliasedFieldRec
+              { src = src',
+                offset = offset',
+                core = coreInst
+              }
+      Prelude.print rec
+      return $ MediumLevelILVarAliasedField rec
     MLIL_VAR_SPLIT_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_VAR_SPLIT_SSA")
     MLIL_ASSERT_SSA -> do
@@ -1677,7 +1720,6 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      Prelude.print rec
       return $ MediumLevelILIntrinsicSsa rec
     MLIL_MEMORY_INTRINSIC_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_SSA")
