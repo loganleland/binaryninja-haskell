@@ -815,6 +815,11 @@ data MediumLevelILFtruncRec = MediumLevelILFtruncRec
   } deriving (Show)
 
 
+data MediumLevelILJumpToRec = MediumLevelILJumpToRec
+  { dest :: MediumLevelILSSAInstruction
+  , target :: TargetMap
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
 
 
 data MediumLevelILSSAInstruction =
@@ -825,6 +830,7 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILVarSsa MediumLevelILVarSsaRec
  | MediumLevelILSetVarSsa MediumLevelILSetVarSsaRec
  | MediumLevelILJump MediumLevelILJumpRec
+ | MediumLevelILJumpTo MediumLevelILJumpToRec
  | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
  | MediumLevelILImport MediumLevelILImportRec
  | MediumLevelILAddressOf MediumLevelILAddressOfRec
@@ -1208,7 +1214,14 @@ create func exprIndex'  = do
                 }
       return $ MediumLevelILJump rec
     MLIL_JUMP_TO -> do
-       error $ ("Unimplemented: " ++ show "MLIL_JUMP_TO")
+      dest' <- getExpr func $ getOp rawInst 0
+      target' <- getTargetMap func exprIndex' 1
+      let rec = MediumLevelILJumpToRec
+                { dest = dest'
+                , target = target'
+                , core = coreInst
+                }
+      return $ MediumLevelILJumpTo rec
     MLIL_RET_HINT -> do
        error $ ("Unimplemented: " ++ show "MLIL_RET_HINT")
     MLIL_CALL -> do
