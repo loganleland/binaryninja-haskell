@@ -19,3 +19,7 @@ The demo will be moved into a proper test prior to 1.0 release.
 Currently targeting Binary Ninja Ultimate 5.1.8005-Stable.
 Once a 1.0 version is finished this repo will contain tags
 for each supported version of binary ninja.
+
+## Format
+All haskell files are formatted with https://github.com/tweag/ormolu .
+One way to accomplish this is executing: ```ormolu --mode inplace $(find . -name '*.hs')``` in the top level directory.
