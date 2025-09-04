@@ -725,6 +725,98 @@ data MediumLevelILSubRec = MediumLevelILSubRec
   } deriving (Show)
 
 
+data MediumLevelILNegRec = MediumLevelILNegRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILNotRec = MediumLevelILNotRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILSxRec = MediumLevelILSxRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILZxRec = MediumLevelILZxRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILLowPartRec = MediumLevelILLowPartRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFsqrtRec = MediumLevelILFsqrtRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFnegRec = MediumLevelILFnegRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFabsRec = MediumLevelILFabsRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFloatToIntRec = MediumLevelILFloatToIntRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILIntToFloatRec = MediumLevelILIntToFloatRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFloatConvRec = MediumLevelILFloatConvRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILRoundToIntRec = MediumLevelILRoundToIntRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFloorRec = MediumLevelILFloorRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILCeilRec = MediumLevelILCeilRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+data MediumLevelILFtruncRec = MediumLevelILFtruncRec
+  { src :: MediumLevelILSSAInstruction
+  , core :: CoreMediumLevelILInstruction
+  } deriving (Show)
+
+
+
+
 data MediumLevelILSSAInstruction =
    MediumLevelILCallSsa MediumLevelILCallSsaRec
  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -776,6 +868,21 @@ data MediumLevelILSSAInstruction =
  | MediumLevelILModuDp MediumLevelILModuDpRec
  | MediumLevelILMods MediumLevelILModsRec
  | MediumLevelILModsDp MediumLevelILModsDpRec
+ | MediumLevelILNeg MediumLevelILNegRec
+ | MediumLevelILNot MediumLevelILNotRec
+ | MediumLevelILCeil MediumLevelILCeilRec
+ | MediumLevelILSx MediumLevelILSxRec
+ | MediumLevelILZx MediumLevelILZxRec
+ | MediumLevelILLowPart MediumLevelILLowPartRec
+ | MediumLevelILFsqrt MediumLevelILFsqrtRec
+ | MediumLevelILFneg MediumLevelILFnegRec
+ | MediumLevelILFabs MediumLevelILFabsRec
+ | MediumLevelILFloatToInt MediumLevelILFloatToIntRec
+ | MediumLevelILIntToFloat MediumLevelILIntToFloatRec
+ | MediumLevelILFloatConv MediumLevelILFloatConvRec
+ | MediumLevelILRoundToInt MediumLevelILRoundToIntRec
+ | MediumLevelILFloor MediumLevelILFloorRec
+ | MediumLevelILFtrunc MediumLevelILFtruncRec
  deriving (Show)
 
 
@@ -1059,15 +1166,40 @@ create func exprIndex'  = do
                 }
       return $ MediumLevelILModsDp rec
     MLIL_NEG -> do
-       error $ ("Unimplemented: " ++ show "MLIL_NEG")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILNegRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILNeg rec
     MLIL_NOT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_NOT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILNotRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILNot rec
     MLIL_SX -> do
-       error $ ("Unimplemented: " ++ show "MLIL_SX")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILSxRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILSx rec
     MLIL_ZX -> do
-       error $ ("Unimplemented: " ++ show "MLIL_ZX")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILZxRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILZx rec
     MLIL_LOW_PART -> do
-       error $ ("Unimplemented: " ++ show "MLIL_LOW_PART")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILLowPartRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILLowPart rec
     MLIL_JUMP -> do
       dest' <- getExpr func $ getOp rawInst 1
       let rec = MediumLevelILJumpRec
@@ -1245,25 +1377,75 @@ create func exprIndex'  = do
     MLIL_FDIV -> do
        error $ ("Unimplemented: " ++ show "MLIL_FDIV")
     MLIL_FSQRT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FSQRT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFsqrtRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFsqrt rec
     MLIL_FNEG -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FNEG")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFnegRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFneg rec
     MLIL_FABS -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FABS")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFabsRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFabs rec
     MLIL_FLOAT_TO_INT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FLOAT_TO_INT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFloatToIntRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFloatToInt rec
     MLIL_INT_TO_FLOAT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_INT_TO_FLOAT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILIntToFloatRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILIntToFloat rec
     MLIL_FLOAT_CONV -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FLOAT_CONV")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFloatConvRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFloatConv rec
     MLIL_ROUND_TO_INT -> do
-       error $ ("Unimplemented: " ++ show "MLIL_ROUND_TO_INT")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILRoundToIntRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILRoundToInt rec
     MLIL_FLOOR -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FLOOR")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFloorRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFloor rec
     MLIL_CEIL -> do
-       error $ ("Unimplemented: " ++ show "MLIL_CEIL")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILCeilRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILCeil rec
     MLIL_FTRUNC -> do
-       error $ ("Unimplemented: " ++ show "MLIL_FTRUNC")
+      src' <- getExpr func $ getOp rawInst 0
+      let rec = MediumLevelILFtruncRec
+                { src = src'
+                , core = coreInst
+                }
+      return $ MediumLevelILFtrunc rec
     MLIL_FCMP_E -> do
        error $ ("Unimplemented: " ++ show "MLIL_FCMP_E")
     MLIL_FCMP_NE -> do
