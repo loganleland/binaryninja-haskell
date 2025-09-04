@@ -36,13 +36,13 @@ startIndex func arch addr = do
   if arch == nullPtr || func == nullPtr 
   then return Nothing
   else do
-    start <- c_BNLowLevelILGetInstructionStart func arch addr        
+    startI <- c_BNLowLevelILGetInstructionStart func arch addr        
     count <- c_BNGetLowLevelILInstructionCount func
     -- Ensure start index is less than total llil instructions
     -- in function
-    if start >= count
+    if startI >= count
     then return Nothing
-    else return $ Just start
+    else return $ Just startI
 
 
 foreign import ccall unsafe "BNGetLowLevelILIndexForInstruction"

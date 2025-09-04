@@ -251,8 +251,8 @@ getTargetMap func expr operand =
         then return []
         else forM [0 .. pairCount - 1] $ \j -> do
                key    <- peekElemOff rawPtr (j * 2)
-               target <- peekElemOff rawPtr (j * 2 + 1)
-               return (key, target)
+               target' <- peekElemOff rawPtr (j * 2 + 1)
+               return (key, target')
     when (rawPtr /= nullPtr) $
       c_BNMediumLevelILFreeOperandList rawPtr
     return pairs
