@@ -73,6 +73,7 @@ module Types
   , BNReferenceSource(..)
   , Types.alignmentS
   , getArch
+  , getIntrinsic
   ) where
 
 
@@ -140,9 +141,10 @@ type TargetMap = [(CULLong, CULLong)]
 
 
 data ILIntrinsic = ILIntrinsic
-  { intrinsicIndex :: !CSize
-  , intrinsicArch :: !BNArchPtr
+  { index :: !CSize
+  , archHandle :: !BNArchPtr
   , arch :: Architecture
+  , intrinsic :: Intrinsic
   } deriving (Show)
 
 
@@ -160,7 +162,21 @@ getArch arch' = do
     _ -> error "Unimplemented architecture"
 
 
+getIntrinsic :: Architecture -> CSize -> IO Intrinsic
+getIntrinsic arch' index' = do
+  case arch' of
+    Arm64 ->
+      if index' < 54
+      then return $ IntrinsicArm64 (toEnum $ fromIntegral index' :: Arm64Intrinsic)
+      else return $ IntrinsicArmNeon (toEnum $ fromIntegral index' :: ArmNeonIntrinsic)
+    _ -> error "Unimplemented architecture"
+
+
 data Architecture = Arm64
+  deriving Show
+
+
+data Intrinsic = IntrinsicArm64 Arm64Intrinsic | IntrinsicArmNeon ArmNeonIntrinsic
   deriving Show
 
 

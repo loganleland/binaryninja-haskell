@@ -258,12 +258,14 @@ getTargetMap func expr operand =
     return pairs
 
 
-getIntrinsic :: BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO ILIntrinsic
-getIntrinsic inst func operand = do
+getIntrinsicIL :: BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO ILIntrinsic
+getIntrinsicIL inst func operand = do
+  let index' = getOp inst operand
   rawFunc <- Function.mlilToRawFunction func
-  let arch = architecture rawFunc
-  archTy <- getArch arch
-  return $ ILIntrinsic (getOp inst operand) arch archTy
+  let arch' = architecture rawFunc
+  archTy <- getArch arch'
+  intrinsic' <- getIntrinsic archTy index'
+  return $ ILIntrinsic index' arch' archTy intrinsic'
 
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
@@ -1635,7 +1637,7 @@ create func exprIndex'  = do
        error $ ("Unimplemented: " ++ show "MLIL_STORE_STRUCT_SSA")
     MLIL_INTRINSIC_SSA -> do
       output' <- getSSAVarList func exprIndex' 0
-      intrinsic' <- getIntrinsic rawInst func 2
+      intrinsic' <- getIntrinsicIL rawInst func 2
       params' <- getExprList func exprIndex' 3
       let rec = MediumLevelILIntrinsicSsaRec
                 { output = output'
