@@ -1,20 +1,22 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Symbol
-  ( ty
-  , binding
-  , name
-  , shortName
-  , fullName
-  , Symbol.address
-  , ordinal
-  , auto
-  , Symbol.codeRefs
-  , Symbol.print
-  ) where
 
+module Symbol
+  ( ty,
+    binding,
+    name,
+    shortName,
+    fullName,
+    Symbol.address,
+    ordinal,
+    auto,
+    Symbol.codeRefs,
+    Symbol.print,
+  )
+where
+
+import qualified ReferenceSource as RS
 import Types
 import Utils
-import qualified ReferenceSource as RS
 
 foreign import ccall "BNGetSymbolType"
   c_BNGetSymbolType :: BNSymbolPtr -> IO CInt
@@ -81,18 +83,17 @@ codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [BNReferenceSource]
 codeRefs view sym = do
   addr <- Symbol.address sym
   RS.codeRefs view addr
-  
 
 print :: BNSymbolPtr -> IO ()
 print sym = do
   nameStr <- name sym
-  t       <- ty sym
-  b       <- binding sym
-  sname   <- shortName sym
-  fname   <- fullName sym
-  addr    <- Symbol.address sym
-  ord     <- ordinal sym
-  isAuto  <- auto sym
+  t <- ty sym
+  b <- binding sym
+  sname <- shortName sym
+  fname <- fullName sym
+  addr <- Symbol.address sym
+  ord <- ordinal sym
+  isAuto <- auto sym
   putStrLn "==============================="
   putStrLn ("Name      : " ++ nameStr)
   putStrLn ("Type      : " ++ show t)
@@ -102,4 +103,3 @@ print sym = do
   putStrLn ("Address   : " ++ show addr)
   putStrLn ("Ordinal   : " ++ show ord)
   putStrLn ("Auto      : " ++ show isAuto)
-

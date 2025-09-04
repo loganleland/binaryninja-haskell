@@ -1,21 +1,28 @@
 -- Test program (To be moved to testing prior to first release)
 
-
 module Main where
 
-import FFI (getProduct, getProductType, getLicensedUserEmail,
-            getSerialNumberString, getVersionString, setLicense,
-            shutdown, getUniqueIdentifierString, getSettingsFileName)
 import BinaryView
-import Plugin
-import Symbol
-import Types
-import ReferenceSource
-import Llil
-import Mlil
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
+import FFI
+  ( getLicensedUserEmail,
+    getProduct,
+    getProductType,
+    getSerialNumberString,
+    getSettingsFileName,
+    getUniqueIdentifierString,
+    getVersionString,
+    setLicense,
+    shutdown,
+  )
 import qualified Function
+import Llil
+import Mlil
+import Plugin
+import ReferenceSource
+import Symbol
+import Types
 
 main :: IO ()
 main = do
@@ -37,16 +44,16 @@ main = do
   putStrLn ("user directory: " ++ userDir)
   settingsFilename <- getSettingsFileName
   putStrLn ("getSettingsFileName: " ++ settingsFilename)
-  installDirectory <- getInstallDirectory 
+  installDirectory <- getInstallDirectory
   putStrLn ("getInstallDirectory : " ++ installDirectory)
   -- Test BNLoadFileName
-  --let filename = "/usr/bin/file" -- Modify with a valid binary path
+  -- let filename = "/usr/bin/file" -- Modify with a valid binary path
   let filename = "TEST.bndb" -- Modify with a valid binary path
   let options = "{}" -- Example JSON options
   view <- load filename options
   if view == nullPtr
-     then putStrLn "Failed to load binary view."
-     else putStrLn "Binary view loaded successfully."
+    then putStrLn "Failed to load binary view."
+    else putStrLn "Binary view loaded successfully."
   resultTEST <- save view "./TEST_file.bndb"
   if resultTEST then putStrLn "[*] SAVED" else putStrLn "[*] Not Saved"
   existFunction <- hasFunctions view
@@ -54,19 +61,18 @@ main = do
   if hasSymbols view then putStrLn "[*] Has symbols." else putStrLn "[*] Has no symbols."
 
   -- Get functions, mlil ssa version then all mlil ssa instructions in all functions
-  --funcs <- functions view
-  --mlilSSAFuncs <- mapM Function.mlilSSA funcs
-  --mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs 
-  --Prelude.print mlilSSAInstructions 
+  -- funcs <- functions view
+  -- mlilSSAFuncs <- mapM Function.mlilSSA funcs
+  -- mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs
+  -- Prelude.print mlilSSAInstructions
 
   -- Get code refs for address 4462920
-  --codeRef <- ReferenceSource.codeRefs view 4462920
-  --mlils <- mapM Mlil.fromRef codeRef
-  --mapM_ Prelude.print mlils
+  -- codeRef <- ReferenceSource.codeRefs view 4462920
+  -- mlils <- mapM Mlil.fromRef codeRef
+  -- mapM_ Prelude.print mlils
   --
   --
   allInstructions <- Mlil.instructions view
-  mapM_ Prelude.print allInstructions 
+  mapM_ Prelude.print allInstructions
   shutdown
   putStrLn "Shutting Down...."
-

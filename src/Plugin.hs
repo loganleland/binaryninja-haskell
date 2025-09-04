@@ -1,17 +1,18 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Plugin
-  ( initPlugins
-  , getInstallDirectory
-  , getBundledPluginDirectory
-  , getUserDirectory
-  , getRepositoriesDirectory
-  , getUserPluginDirectory
-  ) where
 
+module Plugin
+  ( initPlugins,
+    getInstallDirectory,
+    getBundledPluginDirectory,
+    getUserDirectory,
+    getRepositoriesDirectory,
+    getUserPluginDirectory,
+  )
+where
+
+import Data.Bool (bool)
 import Types
 import Utils
-import Data.Bool (bool)
-
 
 foreign import ccall "BNInitPlugins"
   c_BNInitPlugins :: CBool -> IO CBool
@@ -48,4 +49,3 @@ foreign import ccall "BNGetRepositoriesDirectory"
 
 getRepositoriesDirectory :: IO String
 getRepositoriesDirectory = peekCString =<< c_BNGetRepositoriesDirectory
-
