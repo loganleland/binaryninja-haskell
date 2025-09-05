@@ -811,6 +811,117 @@ data MediumLevelILVarAliasedFieldRec = MediumLevelILVarAliasedFieldRec
   }
   deriving (Show)
 
+data MediumLevelILSetVarAliasedFieldRec = MediumLevelILSetVarAliasedFieldRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    offset :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLoadStructSsaRec = MediumLevelILLoadStructSsaRec
+  { src :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILStoreStructSsaRec = MediumLevelILStoreStructSsaRec
+  { dest :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    destMemory :: Int,
+    srcMemory :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpERec = MediumLevelILFcmpERec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpNeRec = MediumLevelILFcmpNeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpLtRec = MediumLevelILFcmpLtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpLeRec = MediumLevelILFcmpLeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpGeRec = MediumLevelILFcmpGeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpGtRec = MediumLevelILFcmpGtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpORec = MediumLevelILFcmpORec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpUoRec = MediumLevelILFcmpUoRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFmulRec = MediumLevelILFmulRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFdivRec = MediumLevelILFdivRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFsubRec = MediumLevelILFsubRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFaddRec = MediumLevelILFaddRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -882,6 +993,21 @@ data MediumLevelILSSAInstruction
   | MediumLevelILBoolToInt MediumLevelILBoolToIntRec
   | MediumLevelILVarAliased MediumLevelILVarAliasedRec
   | MediumLevelILVarAliasedField MediumLevelILVarAliasedFieldRec
+  | MediumLevelILSetVarAliasedField MediumLevelILSetVarAliasedFieldRec
+  | MediumLevelILLoadStructSsa MediumLevelILLoadStructSsaRec
+  | MediumLevelILStoreStructSsa MediumLevelILStoreStructSsaRec
+  | MediumLevelILFcmpE MediumLevelILFcmpERec
+  | MediumLevelILFcmpNe MediumLevelILFcmpNeRec
+  | MediumLevelILFcmpLt MediumLevelILFcmpLtRec
+  | MediumLevelILFcmpLe MediumLevelILFcmpLeRec
+  | MediumLevelILFcmpGe MediumLevelILFcmpGeRec
+  | MediumLevelILFcmpGt MediumLevelILFcmpGtRec
+  | MediumLevelILFcmpO MediumLevelILFcmpORec
+  | MediumLevelILFcmpUo MediumLevelILFcmpUoRec
+  | MediumLevelILFadd MediumLevelILFaddRec
+  | MediumLevelILFsub MediumLevelILFsubRec
+  | MediumLevelILFmul MediumLevelILFmulRec
+  | MediumLevelILFdiv MediumLevelILFdivRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -1425,13 +1551,45 @@ create func exprIndex' = do
     MLIL_UNIMPL_MEM -> do
       error $ ("Unimplemented: " ++ show "MLIL_UNIMPL_MEM")
     MLIL_FADD -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FADD")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFaddRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFadd rec
     MLIL_FSUB -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FSUB")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFsubRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFsub rec
     MLIL_FMUL -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FMUL")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFmulRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFmul rec
     MLIL_FDIV -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FDIV")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFdivRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFdiv rec
     MLIL_FSQRT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1513,21 +1671,85 @@ create func exprIndex' = do
               }
       return $ MediumLevelILFtrunc rec
     MLIL_FCMP_E -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_E")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpERec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpE rec
     MLIL_FCMP_NE -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_NE")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpNeRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpNe rec
     MLIL_FCMP_LT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_LT")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpLtRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpLt rec
     MLIL_FCMP_LE -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_LE")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpLeRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpLe rec
     MLIL_FCMP_GE -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_GE")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpGeRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpGe rec
     MLIL_FCMP_GT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_GT")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpGtRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpGt rec
     MLIL_FCMP_O -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_O")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpORec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpO rec
     MLIL_FCMP_UO -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FCMP_UO")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILFcmpUoRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILFcmpUo rec
     MLIL_SET_VAR_SSA -> do
       dest' <- getSSAVar rawInst 0 1
       src' <- getExpr func $ getOp rawInst 2
@@ -1567,7 +1789,19 @@ create func exprIndex' = do
               }
       return $ MediumLevelILSetVarAliased rec
     MLIL_SET_VAR_ALIASED_FIELD -> do
-      error $ ("Unimplemented: " ++ show "MLIL_SET_VAR_ALIASED_FIELD")
+      dest' <- getSSAVarAndDest rawInst 0 1
+      prev' <- getSSAVarAndDest rawInst 0 2
+      offset' <- getInt rawInst 3
+      src' <- getExpr func $ getOp rawInst 4
+      let rec =
+            MediumLevelILSetVarAliasedFieldRec
+              { dest = dest',
+                prev = prev',
+                offset = offset',
+                src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILSetVarAliasedField rec
     MLIL_VAR_SSA -> do
       src' <- getSSAVar rawInst 0 1
       let rec =
@@ -1604,7 +1838,6 @@ create func exprIndex' = do
                 offset = offset',
                 core = coreInst
               }
-      Prelude.print rec
       return $ MediumLevelILVarAliasedField rec
     MLIL_VAR_SPLIT_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_VAR_SPLIT_SSA")
@@ -1692,7 +1925,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILLoadSsa rec
     MLIL_LOAD_STRUCT_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_LOAD_STRUCT_SSA")
+      src' <- getExpr func $ getOp rawInst 0
+      offset' <- getInt rawInst 1
+      srcMemory' <- getInt rawInst 2
+      let rec =
+            MediumLevelILLoadStructSsaRec
+              { src = src',
+                offset = offset',
+                srcMemory = srcMemory',
+                core = coreInst
+              }
+      return $ MediumLevelILLoadStructSsa rec
     MLIL_STORE_SSA -> do
       dest' <- getExpr func $ getOp rawInst 0
       destMemory' <- getInt rawInst 1
@@ -1708,7 +1951,21 @@ create func exprIndex' = do
               }
       return $ MediumLevelILStoreSsa rec
     MLIL_STORE_STRUCT_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_STORE_STRUCT_SSA")
+      dest' <- getExpr func $ getOp rawInst 0
+      offset' <- getInt rawInst 1
+      destMemory' <- getInt rawInst 2
+      srcMemory' <- getInt rawInst 3
+      src' <- getExpr func $ getOp rawInst 4
+      let rec =
+            MediumLevelILStoreStructSsaRec
+              { dest = dest',
+                offset = offset',
+                destMemory = destMemory',
+                srcMemory = srcMemory',
+                src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILStoreStructSsa rec
     MLIL_INTRINSIC_SSA -> do
       output' <- getSSAVarList func exprIndex' 0
       intrinsic' <- getIntrinsicIL rawInst func 2
