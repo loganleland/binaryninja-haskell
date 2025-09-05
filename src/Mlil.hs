@@ -172,50 +172,34 @@ getSSAVar inst varOP version' = do
 getSSAVarAndDest :: BNMediumLevelILInstruction -> CSize -> CSize -> IO BNSSAVariable
 getSSAVarAndDest = getSSAVar
 
-getFloat :: BNMediumLevelILInstruction -> Int -> Double
-getFloat inst index =
+getFloat :: BNMediumLevelILInstruction -> CSize -> IO Double
+getFloat inst index' =
   case mlSize inst of
-    4 -> float2Double $ castWord32ToFloat w32
-    8 -> castWord64ToDouble w64
-    _ -> fromIntegral value
+    4 -> return $ float2Double $ castWord32ToFloat w32
+    8 -> return $ castWord64ToDouble w64
+    _ -> return $ fromIntegral value
   where
     w64 = fromIntegral value :: Word64
     w32 = fromIntegral $ w64 .&. 0xffffffff :: Word32
-    value = case index of
-      0 -> mlOp0 inst
-      1 -> mlOp1 inst
-      2 -> mlOp2 inst
-      3 -> mlOp3 inst
-      4 -> mlOp4 inst
-      _ -> error $ "getFloat: " ++ show index ++ " not in [0, .., 4]"
+    value = getOp inst index'
 
 foreign import ccall unsafe "BNGetConstantData"
   c_BNGetConstantData ::
     BNFunctionPtr ->
-    Word64 ->
-    Word64 ->
+    CSize ->
+    CSize ->
     CSize ->
     Ptr CInt ->
     IO BNDataBufferPtr
 
-getConstantData :: BNFunctionPtr -> BNMediumLevelILInstruction -> Int -> Int -> IO BNDataBufferPtr
+-- TODO: Lift BNDataBufferPtr into a higher type.
+-- Currently this is uniquely used by MediumLevelILConstData
+getConstantData :: BNFunctionPtr -> BNMediumLevelILInstruction -> CSize -> CSize -> IO BNDataBufferPtr
 getConstantData func inst op1 op2 =
   c_BNGetConstantData func state value (mlSize inst) nullPtr
   where
-    state = case op1 of
-      0 -> mlOp0 inst
-      1 -> mlOp1 inst
-      2 -> mlOp2 inst
-      3 -> mlOp3 inst
-      4 -> mlOp4 inst
-      _ -> error $ "getConstantData: state: " ++ show op1 ++ " not in [0, .., 4]"
-    value = case op2 of
-      0 -> mlOp0 inst
-      1 -> mlOp1 inst
-      2 -> mlOp2 inst
-      3 -> mlOp3 inst
-      4 -> mlOp4 inst
-      _ -> error $ "getConstantData: value " ++ show op2 ++ " not in [0, .., 4]"
+    state = getOp inst op1
+    value = getOp inst op2
 
 getTargetMap :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO TargetMap
 getTargetMap func expr operand =
@@ -400,6 +384,13 @@ data MediumLevelILImportRec = MediumLevelILImportRec
 
 data MediumLevelILAddressOfRec = MediumLevelILAddressOfRec
   { src :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddressOfFieldRec = MediumLevelILAddressOfFieldRec
+  { src :: BNVariable,
+    offset :: Int,
     core :: CoreMediumLevelILInstruction
   }
   deriving (Show)
@@ -623,6 +614,13 @@ data MediumLevelILModsRec = MediumLevelILModsRec
   deriving (Show)
 
 data MediumLevelILModsDpRec = MediumLevelILModsDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddOverflowRec = MediumLevelILAddOverflowRec
   { left :: MediumLevelILSSAInstruction,
     right :: MediumLevelILSSAInstruction,
     core :: CoreMediumLevelILInstruction
@@ -922,6 +920,57 @@ data MediumLevelILFaddRec = MediumLevelILFaddRec
   }
   deriving (Show)
 
+data MediumLevelILTestBitRec = MediumLevelILTestBitRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILConstDataRec = MediumLevelILConstDataRec
+  { constant :: BNDataBufferPtr,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFloatConstRec = MediumLevelILFloatConstRec
+  { constant :: Double,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAdcRec = MediumLevelILAdcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSbbRec = MediumLevelILSbbRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRlcRec = MediumLevelILRlcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRrcRec = MediumLevelILRrcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -934,6 +983,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
   | MediumLevelILImport MediumLevelILImportRec
   | MediumLevelILAddressOf MediumLevelILAddressOfRec
+  | MediumLevelILAddressOfField MediumLevelILAddressOfFieldRec
   | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
   | MediumLevelILConst MediumLevelILConstRec
   | MediumLevelILIf MediumLevelILIfRec
@@ -956,6 +1006,10 @@ data MediumLevelILSSAInstruction
   | MediumLevelILRol MediumLevelILRolRec
   | MediumLevelILRor MediumLevelILRorRec
   | MediumLevelILMul MediumLevelILMulRec
+  | MediumLevelILAdc MediumLevelILAdcRec
+  | MediumLevelILSbb MediumLevelILSbbRec
+  | MediumLevelILRlc MediumLevelILRlcRec
+  | MediumLevelILRrc MediumLevelILRrcRec
   | MediumLevelILNoRet MediumLevelILNoRetRec
   | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
   | MediumLevelILSetVarAliased MediumLevelILSetVarAliasedRec
@@ -1008,6 +1062,10 @@ data MediumLevelILSSAInstruction
   | MediumLevelILFsub MediumLevelILFsubRec
   | MediumLevelILFmul MediumLevelILFmulRec
   | MediumLevelILFdiv MediumLevelILFdivRec
+  | MediumLevelILConstData MediumLevelILConstDataRec
+  | MediumLevelILAddOverflow MediumLevelILAddOverflowRec
+  | MediumLevelILFloatConst MediumLevelILFloatConstRec
+  | MediumLevelILTestBit MediumLevelILTestBitRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -1065,7 +1123,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILAddressOf rec
     MLIL_ADDRESS_OF_FIELD -> do
-      error $ ("Unimplemented: " ++ show "MLIL_ADDRESS_OF_FIELD")
+      src' <- varFromID $ fromIntegral $ getOp rawInst 0
+      offset' <- getInt rawInst 1
+      let rec =
+            MediumLevelILAddressOfFieldRec
+              { src = src',
+                offset = offset',
+                core = coreInst
+              }
+      return $ MediumLevelILAddressOfField rec
     MLIL_CONST -> do
       constant' <- getInt rawInst 0
       let rec =
@@ -1075,7 +1141,14 @@ create func exprIndex' = do
               }
       return $ MediumLevelILConst rec
     MLIL_CONST_DATA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_CONST_DATA")
+      rawFunc <- Function.mlilToRawFunction func
+      constant' <- getConstantData rawFunc rawInst 0 1
+      let rec =
+            MediumLevelILConstDataRec
+              { constant = constant',
+                core = coreInst
+              }
+      return $ MediumLevelILConstData rec
     MLIL_CONST_PTR -> do
       constant' <- getInt rawInst 0
       let rec =
@@ -1087,7 +1160,13 @@ create func exprIndex' = do
     MLIL_EXTERN_PTR -> do
       error $ ("Unimplemented: " ++ show "MLIL_EXTERN_PTR")
     MLIL_FLOAT_CONST -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FLOAT_CONST")
+      constant' <- getFloat rawInst 0
+      let rec =
+            MediumLevelILFloatConstRec
+              { constant = constant',
+                core = coreInst
+              }
+      return $ MediumLevelILFloatConst rec
     MLIL_IMPORT -> do
       constant' <- getInt rawInst 0
       let rec =
@@ -1107,7 +1186,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILAdd rec
     MLIL_ADC -> do
-      error $ ("Unimplemented: " ++ show "MLIL_ADC")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      carry' <- getExpr func $ getOp rawInst 2
+      let rec =
+            MediumLevelILAdcRec
+              { left = left',
+                right = right',
+                carry = carry',
+                core = coreInst
+              }
+      return $ MediumLevelILAdc rec
     MLIL_SUB -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1119,7 +1208,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILSub rec
     MLIL_SBB -> do
-      error $ ("Unimplemented: " ++ show "MLIL_SBB")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      carry' <- getExpr func $ getOp rawInst 2
+      let rec =
+            MediumLevelILSbbRec
+              { left = left',
+                right = right',
+                carry = carry',
+                core = coreInst
+              }
+      return $ MediumLevelILSbb rec
     MLIL_AND -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1191,7 +1290,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILRol rec
     MLIL_RLC -> do
-      error $ ("Unimplemented: " ++ show "MLIL_RLC")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      carry' <- getExpr func $ getOp rawInst 2
+      let rec =
+            MediumLevelILRlcRec
+              { left = left',
+                right = right',
+                carry = carry',
+                core = coreInst
+              }
+      return $ MediumLevelILRlc rec
     MLIL_ROR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1203,7 +1312,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILRor rec
     MLIL_RRC -> do
-      error $ ("Unimplemented: " ++ show "MLIL_RRC")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      carry' <- getExpr func $ getOp rawInst 2
+      let rec =
+            MediumLevelILRrcRec
+              { left = left',
+                right = right',
+                carry = carry',
+                core = coreInst
+              }
+      return $ MediumLevelILRrc rec
     MLIL_MUL -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1517,7 +1636,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILCmpUgt rec
     MLIL_TEST_BIT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_TEST_BIT")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILTestBitRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILTestBit rec
     MLIL_BOOL_TO_INT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1527,7 +1654,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILBoolToInt rec
     MLIL_ADD_OVERFLOW -> do
-      error $ ("Unimplemented: " ++ show "MLIL_ADD_OVERFLOW")
+      left' <- getExpr func $ getOp rawInst 0
+      right' <- getExpr func $ getOp rawInst 1
+      let rec =
+            MediumLevelILAddOverflowRec
+              { left = left',
+                right = right',
+                core = coreInst
+              }
+      return $ MediumLevelILAddOverflow rec
     MLIL_SYSCALL -> do
       error $ ("Unimplemented: " ++ show "MLIL_SYSCALL")
     MLIL_SYSCALL_UNTYPED -> do
