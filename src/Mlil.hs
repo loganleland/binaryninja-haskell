@@ -1255,6 +1255,23 @@ data MediumLevelILTailcallUntypedSsaRec = MediumLevelILTailcallUntypedSsaRec
   }
   deriving (Show)
 
+data MediumLevelILMemoryIntrinsicOutputSsaRec = MediumLevelILMemoryIntrinsicOutputSsaRec
+  { destMemory :: Int,
+    output :: [BNSSAVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMemoryIntrinsicSsaRec = MediumLevelILMemoryIntrinsicSsaRec
+  { output :: [BNSSAVariable],
+    destMemory :: Int,
+    intrinsic :: ILIntrinsic,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1391,6 +1408,8 @@ data MediumLevelILSSAInstruction
   | MediumLevelILSyscallSsa MediumLevelILSyscallSsaRec
   | MediumLevelILSyscallUntypedSsa MediumLevelILSyscallUntypedSsaRec
   | MediumLevelILTailcallUntypedSsa MediumLevelILTailcallUntypedSsaRec
+  | MediumLevelILMemoryIntrinsicOutputSsa MediumLevelILMemoryIntrinsicOutputSsaRec
+  | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2770,7 +2789,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILCallOutputSsa rec
     MLIL_MEMORY_INTRINSIC_OUTPUT_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_OUTPUT_SSA")
+      destMemory' <- getInt rawInst 0
+      output' <- getSSAVarList func exprIndex' 1
+      let rec =
+            MediumLevelILMemoryIntrinsicOutputSsaRec
+              { destMemory = destMemory',
+                output = output',
+                core = coreInst
+              }
+      return $ MediumLevelILMemoryIntrinsicOutputSsa rec
     MLIL_LOAD_SSA -> do
       src' <- getExpr func $ getOp rawInst 0
       srcMemory' <- getInt rawInst 1
@@ -2836,7 +2863,26 @@ create func exprIndex' = do
               }
       return $ MediumLevelILIntrinsicSsa rec
     MLIL_MEMORY_INTRINSIC_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_MEMORY_INTRINSIC_SSA")
+      outputInst <- getExpr func $ getOp rawInst 0
+      (output', outputDestMemory') <- case outputInst of
+        MediumLevelILMemoryIntrinsicOutputSsa (MediumLevelILMemoryIntrinsicOutputSsaRec {output = d, destMemory = dM}) -> return (d, dM)
+        _ ->
+          error $
+            "create: Output of MediumLevelILMemoryIntrinsicOutputSsa: expected MediumLevelILMemoryIntrinsicOutputSsa : "
+              ++ show outputInst
+      intrinsic' <- getIntrinsicIL rawInst func 1
+      params' <- getExprList func exprIndex' 2
+      srcMemory' <- getInt rawInst 4
+      let rec =
+            MediumLevelILMemoryIntrinsicSsaRec
+              { output = output',
+                destMemory = outputDestMemory',
+                intrinsic = intrinsic',
+                params = params',
+                srcMemory = srcMemory',
+                core = coreInst
+              }
+      return $ MediumLevelILMemoryIntrinsicSsa rec
     MLIL_FREE_VAR_SLOT_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_FREE_VAR_SLOT_SSA")
     MLIL_VAR_PHI -> do
