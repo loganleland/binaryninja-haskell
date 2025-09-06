@@ -807,6 +807,14 @@ data MediumLevelILIntrinsicSsaRec = MediumLevelILIntrinsicSsaRec
   }
   deriving (Show)
 
+data MediumLevelILIntrinsicRec = MediumLevelILIntrinsicRec
+  { output :: [BNVariable],
+    intrinsic :: ILIntrinsic,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILBoolToIntRec = MediumLevelILBoolToIntRec
   { src :: MediumLevelILSSAInstruction,
     core :: CoreMediumLevelILInstruction
@@ -1288,6 +1296,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILFloor MediumLevelILFloorRec
   | MediumLevelILFtrunc MediumLevelILFtruncRec
   | MediumLevelILIntrinsicSsa MediumLevelILIntrinsicSsaRec
+  | MediumLevelILIntrinsic MediumLevelILIntrinsicRec
   | MediumLevelILBoolToInt MediumLevelILBoolToIntRec
   | MediumLevelILVarAliased MediumLevelILVarAliasedRec
   | MediumLevelILVarAliasedField MediumLevelILVarAliasedFieldRec
@@ -2184,7 +2193,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILTailcallUntyped rec
     MLIL_INTRINSIC -> do
-      error $ ("Unimplemented: " ++ show "MLIL_INTRINSIC")
+      output' <- getVarList func exprIndex' 0
+      intrinsic' <- getIntrinsicIL rawInst func 2
+      params' <- getExprList func exprIndex' 3
+      let rec =
+            MediumLevelILIntrinsicRec
+              { output = output',
+                intrinsic = intrinsic',
+                params = params',
+                core = coreInst
+              }
+      return $ MediumLevelILIntrinsic rec
     MLIL_FREE_VAR_SLOT -> do
       error $ ("Unimplemented: " ++ show "MLIL_FREE_VAR_SLOT")
     MLIL_BP -> do
