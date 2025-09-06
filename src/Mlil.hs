@@ -1286,6 +1286,13 @@ data MediumLevelILVarPhiRec = MediumLevelILVarPhiRec
   }
   deriving (Show)
 
+data MediumLevelILMemPhiRec = MediumLevelILMemPhiRec
+  { destMemory :: Int,
+    srcMemory :: [Int],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1426,6 +1433,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
   | MediumLevelILFreeVarSlotSsa MediumLevelILFreeVarSlotSsaRec
   | MediumLevelILVarPhi MediumLevelILVarPhiRec
+  | MediumLevelILMemPhi MediumLevelILMemPhiRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2920,5 +2928,12 @@ create func exprIndex' = do
               }
       return $ MediumLevelILVarPhi rec
     MLIL_MEM_PHI -> do
-      error $ ("Unimplemented: " ++ show "MLIL_MEM_PHI")
-    _ -> error $ "Unknown instruction type: " ++ show rawInst
+      destMemory' <- getInt rawInst 0
+      srcMemory' <- getIntList func exprIndex' 1
+      let rec =
+            MediumLevelILMemPhiRec
+              { destMemory = destMemory',
+                srcMemory = srcMemory',
+                core = coreInst
+              }
+      return $ MediumLevelILMemPhi rec
