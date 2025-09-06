@@ -1226,6 +1226,15 @@ data MediumLevelILFreeVarSlotRec = MediumLevelILFreeVarSlotRec
   }
   deriving (Show)
 
+data MediumLevelILSyscallSsaRec = MediumLevelILSyscallSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1359,6 +1368,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILTailcall MediumLevelILTailcallRec
   | MediumLevelILTailcallUntyped MediumLevelILTailcallUntypedRec
   | MediumLevelILFreeVarSlot MediumLevelILFreeVarSlotRec
+  | MediumLevelILSyscallSsa MediumLevelILSyscallSsaRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2625,7 +2635,24 @@ create func exprIndex' = do
               }
       return $ MediumLevelILCallUntypedSsa rec
     MLIL_SYSCALL_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_SYSCALL_SSA")
+      outputInst <- getExpr func $ getOp rawInst 0
+      (output', outputDestMemory') <- case outputInst of
+        MediumLevelILCallOutputSsa (MediumLevelILCallOutputSsaRec {dest = d, destMemory = dm}) -> return (d, dm)
+        _ ->
+          error $
+            "create: Output of MediumLevelILSyscallSsa: expected MediumLevelILCallOutputSsa : "
+              ++ show outputInst
+      params' <- getExprList func exprIndex' 1
+      srcMemory' <- getInt rawInst 3
+      let rec =
+            MediumLevelILSyscallSsaRec
+              { output = output',
+                outputDestMemory = outputDestMemory',
+                params = params',
+                srcMemory = srcMemory',
+                core = coreInst
+              }
+      return $ MediumLevelILSyscallSsa rec
     MLIL_SYSCALL_UNTYPED_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_SYSCALL_UNTYPED_SSA")
     MLIL_TAILCALL_SSA -> do
