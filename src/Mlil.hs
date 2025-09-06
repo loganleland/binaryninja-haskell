@@ -1203,6 +1203,15 @@ data MediumLevelILTailcallRec = MediumLevelILTailcallRec
   }
   deriving (Show)
 
+data MediumLevelILTailcallUntypedRec = MediumLevelILTailcallUntypedRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1333,6 +1342,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILSyscall MediumLevelILSyscallRec
   | MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
   | MediumLevelILTailcall MediumLevelILTailcallRec
+  | MediumLevelILTailcallUntyped MediumLevelILTailcallUntypedRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2148,7 +2158,31 @@ create func exprIndex' = do
               }
       return $ MediumLevelILTailcall rec
     MLIL_TAILCALL_UNTYPED -> do
-      error $ ("Unimplemented: " ++ show "MLIL_TAILCALL_UNTYPED")
+      outputInst <- getExpr func $ getOp rawInst 0
+      output' <- case outputInst of
+        MediumLevelILCallOutput (MediumLevelILCallOutputRec {dest = d}) -> return d
+        _ ->
+          error $
+            "create: Output of MediumLevelILTailCallUntyped: expected MediumLevelILCallOutput : "
+              ++ show outputInst
+      dest' <- getExpr func $ getOp rawInst 1
+      paramInst <- getExpr func $ getOp rawInst 2
+      params' <- case paramInst of
+        MediumLevelILCallParam (MediumLevelILCallParamRec {src = s}) -> return s
+        _ ->
+          error $
+            "create: Param of MediumLevelILTailCallUntyped: expected MediumLevelILCallParam : "
+              ++ show paramInst
+      stack' <- getExpr func $ getOp rawInst 3
+      let rec =
+            MediumLevelILTailcallUntypedRec
+              { output = output',
+                dest = dest',
+                params = params',
+                stack = stack',
+                core = coreInst
+              }
+      return $ MediumLevelILTailcallUntyped rec
     MLIL_INTRINSIC -> do
       error $ ("Unimplemented: " ++ show "MLIL_INTRINSIC")
     MLIL_FREE_VAR_SLOT -> do
