@@ -1,5 +1,5 @@
 # binaryninja-haskell
-Haskell bindings for binary ninja with (work-in-progress) support for the medium level SSA intermediate language.
+Haskell bindings for binary ninja with support for the medium level SSA intermediate language.
 
 ## Build Instructions
 Symlink the local install of binary ninja to binaryninja-haskell/lib.
