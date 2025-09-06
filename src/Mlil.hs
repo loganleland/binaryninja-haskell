@@ -1272,6 +1272,13 @@ data MediumLevelILMemoryIntrinsicSsaRec = MediumLevelILMemoryIntrinsicSsaRec
   }
   deriving (Show)
 
+data MediumLevelILFreeVarSlotSsaRec = MediumLevelILFreeVarSlotSsaRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1410,6 +1417,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILTailcallUntypedSsa MediumLevelILTailcallUntypedSsaRec
   | MediumLevelILMemoryIntrinsicOutputSsa MediumLevelILMemoryIntrinsicOutputSsaRec
   | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
+  | MediumLevelILFreeVarSlotSsa MediumLevelILFreeVarSlotSsaRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2884,7 +2892,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILMemoryIntrinsicSsa rec
     MLIL_FREE_VAR_SLOT_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FREE_VAR_SLOT_SSA")
+      dest' <- getSSAVarAndDest rawInst 0 1
+      prev' <- getSSAVarAndDest rawInst 0 2
+      let rec =
+            MediumLevelILFreeVarSlotSsaRec
+              { dest = dest',
+                prev = prev',
+                core = coreInst
+              }
+      return $ MediumLevelILFreeVarSlotSsa rec
     MLIL_VAR_PHI -> do
       error $ ("Unimplemented: " ++ show "MLIL_VAR_PHI")
     MLIL_MEM_PHI -> do
