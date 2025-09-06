@@ -47,8 +47,8 @@ main = do
   installDirectory <- getInstallDirectory
   putStrLn ("getInstallDirectory : " ++ installDirectory)
   -- Test BNLoadFileName
-  -- let filename = "/usr/bin/file" -- Modify with a valid binary path
-  let filename = "TEST.bndb" -- Modify with a valid binary path
+  let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
+  -- let filename = "TEST.bndb" -- Modify with a valid binary path
   let options = "{}" -- Example JSON options
   view <- load filename options
   if view == nullPtr
