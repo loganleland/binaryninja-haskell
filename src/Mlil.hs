@@ -1174,6 +1174,12 @@ data MediumLevelILSeparateParamListRec = MediumLevelILSeparateParamListRec
   }
   deriving (Show)
 
+data MediumLevelILSharedParamSlotRec = MediumLevelILSharedParamSlotRec
+  { params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1300,6 +1306,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILCallUntypedSsa MediumLevelILCallUntypedSsaRec
   | MediumLevelILCallUntyped MediumLevelILCallUntypedRec
   | MediumLevelILSeparateParamList MediumLevelILSeparateParamListRec
+  | MediumLevelILSharedParamSlot MediumLevelILSharedParamSlotRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -1903,7 +1910,13 @@ create func exprIndex' = do
               }
       return $ MediumLevelILSeparateParamList rec
     MLIL_SHARED_PARAM_SLOT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_SHARED_PARAM_SLOT")
+      params' <- getExprList func exprIndex' 0
+      let rec =
+            MediumLevelILSharedParamSlotRec
+              { params = params',
+                core = coreInst
+              }
+      return $ MediumLevelILSharedParamSlot rec
     MLIL_RET -> do
       src' <- getExprList func exprIndex' 0
       let rec =
