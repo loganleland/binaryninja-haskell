@@ -1279,6 +1279,13 @@ data MediumLevelILFreeVarSlotSsaRec = MediumLevelILFreeVarSlotSsaRec
   }
   deriving (Show)
 
+data MediumLevelILVarPhiRec = MediumLevelILVarPhiRec
+  { dest :: BNSSAVariable,
+    src :: [BNSSAVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1418,6 +1425,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILMemoryIntrinsicOutputSsa MediumLevelILMemoryIntrinsicOutputSsaRec
   | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
   | MediumLevelILFreeVarSlotSsa MediumLevelILFreeVarSlotSsaRec
+  | MediumLevelILVarPhi MediumLevelILVarPhiRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2902,7 +2910,15 @@ create func exprIndex' = do
               }
       return $ MediumLevelILFreeVarSlotSsa rec
     MLIL_VAR_PHI -> do
-      error $ ("Unimplemented: " ++ show "MLIL_VAR_PHI")
+      dest' <- getSSAVar rawInst 0 1
+      src' <- getSSAVarList func exprIndex' 2
+      let rec =
+            MediumLevelILVarPhiRec
+              { dest = dest',
+                src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILVarPhi rec
     MLIL_MEM_PHI -> do
       error $ ("Unimplemented: " ++ show "MLIL_MEM_PHI")
     _ -> error $ "Unknown instruction type: " ++ show rawInst
