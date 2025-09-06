@@ -1187,6 +1187,14 @@ data MediumLevelILSyscallRec = MediumLevelILSyscallRec
   }
   deriving (Show)
 
+data MediumLevelILSyscallUntypedRec = MediumLevelILSyscallUntypedRec
+  { output :: [BNVariable],
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1315,6 +1323,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILSeparateParamList MediumLevelILSeparateParamListRec
   | MediumLevelILSharedParamSlot MediumLevelILSharedParamSlotRec
   | MediumLevelILSyscall MediumLevelILSyscallRec
+  | MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2094,7 +2103,29 @@ create func exprIndex' = do
               }
       return $ MediumLevelILSyscall rec
     MLIL_SYSCALL_UNTYPED -> do
-      error $ ("Unimplemented: " ++ show "MLIL_SYSCALL_UNTYPED")
+      outputInst <- getExpr func $ getOp rawInst 0
+      output' <- case outputInst of
+        MediumLevelILCallOutput (MediumLevelILCallOutputRec {dest = d}) -> return d
+        _ ->
+          error $
+            "create: Output of MediumLevelILSyscallUntyped: expected MediumLevelILCallOutput : "
+              ++ show outputInst
+      paramInst <- getExpr func $ getOp rawInst 1
+      params' <- case paramInst of
+        MediumLevelILCallParam (MediumLevelILCallParamRec {src = s}) -> return s
+        _ ->
+          error $
+            "create: Params of MediumLevelILSyscallUntyped: expected MediumLevelILCallParam : "
+              ++ show paramInst
+      stack' <- getExpr func $ getOp rawInst 2
+      let rec =
+            MediumLevelILSyscallUntypedRec
+              { output = output',
+                params = params',
+                stack = stack',
+                core = coreInst
+              }
+      return $ MediumLevelILSyscallUntyped rec
     MLIL_TAILCALL -> do
       error $ ("Unimplemented: " ++ show "MLIL_TAILCALL")
     MLIL_TAILCALL_UNTYPED -> do
