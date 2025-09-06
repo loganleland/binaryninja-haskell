@@ -1220,6 +1220,12 @@ data MediumLevelILTailcallUntypedRec = MediumLevelILTailcallUntypedRec
   }
   deriving (Show)
 
+data MediumLevelILFreeVarSlotRec = MediumLevelILFreeVarSlotRec
+  { dest :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1352,6 +1358,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
   | MediumLevelILTailcall MediumLevelILTailcallRec
   | MediumLevelILTailcallUntyped MediumLevelILTailcallUntypedRec
+  | MediumLevelILFreeVarSlot MediumLevelILFreeVarSlotRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2205,7 +2212,13 @@ create func exprIndex' = do
               }
       return $ MediumLevelILIntrinsic rec
     MLIL_FREE_VAR_SLOT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_FREE_VAR_SLOT")
+      dest' <- varFromID $ fromIntegral $ getOp rawInst 0
+      let rec =
+            MediumLevelILFreeVarSlotRec
+              { dest = dest',
+                core = coreInst
+              }
+      return $ MediumLevelILFreeVarSlot rec
     MLIL_BP -> do
       return $ MediumLevelILBp $ MediumLevelILBpRec {core = coreInst}
     MLIL_TRAP -> do
