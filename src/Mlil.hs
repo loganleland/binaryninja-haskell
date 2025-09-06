@@ -307,8 +307,8 @@ data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
   deriving (Show)
 
 data MediumLevelILNopRec = MediumLevelILNopRec
-  { core :: CoreMediumLevelILInstruction }
-  deriving (Show) 
+  {core :: CoreMediumLevelILInstruction}
+  deriving (Show)
 
 data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
   { output :: [BNSSAVariable],
@@ -326,6 +326,12 @@ data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
   }
   deriving (Show)
 
+data MediumLevelILCallOutputRec = MediumLevelILCallOutputRec
+  { dest :: [BNVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILCallParamSsaRec = MediumLevelILCallParamSsaRec
   { srcMemory :: Int,
     src :: [MediumLevelILSSAInstruction],
@@ -333,6 +339,11 @@ data MediumLevelILCallParamSsaRec = MediumLevelILCallParamSsaRec
   }
   deriving (Show)
 
+data MediumLevelILCallParamRec = MediumLevelILCallParamRec
+  { src :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
 
 data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
   { constant :: Int,
@@ -984,7 +995,6 @@ data MediumLevelILSetVarRec = MediumLevelILSetVarRec
   }
   deriving (Show)
 
-
 data MediumLevelILSetVarFieldRec = MediumLevelILSetVarFieldRec
   { dest :: BNVariable,
     offset :: Int,
@@ -1015,7 +1025,6 @@ data MediumLevelILAssertSsaRec = MediumLevelILAssertSsaRec
   }
   deriving (Show)
 
-
 data MediumLevelILForceVerRec = MediumLevelILForceVerRec
   { dest :: BNVariable,
     src :: BNVariable,
@@ -1030,14 +1039,11 @@ data MediumLevelILForceVerSsaRec = MediumLevelILForceVerSsaRec
   }
   deriving (Show)
 
-
-
 data MediumLevelILLoadRec = MediumLevelILLoadRec
   { src :: MediumLevelILSSAInstruction,
     core :: CoreMediumLevelILInstruction
   }
   deriving (Show)
-
 
 data MediumLevelILLoadStructRec = MediumLevelILLoadStructRec
   { src :: MediumLevelILSSAInstruction,
@@ -1104,7 +1110,7 @@ data MediumLevelILCallRec = MediumLevelILCallRec
   deriving (Show)
 
 data MediumLevelILBpRec = MediumLevelILBpRec
-  { core :: CoreMediumLevelILInstruction }
+  {core :: CoreMediumLevelILInstruction}
   deriving (Show)
 
 data MediumLevelILTrapRec = MediumLevelILTrapRec
@@ -1114,11 +1120,11 @@ data MediumLevelILTrapRec = MediumLevelILTrapRec
   deriving (Show)
 
 data MediumLevelILUndefRec = MediumLevelILUndefRec
-  { core :: CoreMediumLevelILInstruction }
+  {core :: CoreMediumLevelILInstruction}
   deriving (Show)
 
 data MediumLevelILUnimplRec = MediumLevelILUnimplRec
-  { core :: CoreMediumLevelILInstruction }
+  {core :: CoreMediumLevelILInstruction}
   deriving (Show)
 
 data MediumLevelILUnimplMemRec = MediumLevelILUnimplMemRec
@@ -1153,10 +1159,19 @@ data MediumLevelILCallUntypedSsaRec = MediumLevelILCallUntypedSsaRec
   }
   deriving (Show)
 
+data MediumLevelILCallUntypedRec = MediumLevelILCallUntypedRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
 
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
+  | MediumLevelILCallOutput MediumLevelILCallOutputRec
   | MediumLevelILConstPtr MediumLevelILConstPtrRec
   | MediumLevelILNop MediumLevelILNopRec
   | MediumLevelILRet MediumLevelILRetRec
@@ -1198,7 +1213,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
   | MediumLevelILSetVarAliased MediumLevelILSetVarAliasedRec
   | MediumLevelILSetVarSsaField MediumLevelILSetVarSsaFieldRec
-  | MediumLevelILSetVarField MediumLevelILSetVarFieldRec 
+  | MediumLevelILSetVarField MediumLevelILSetVarFieldRec
   | MediumLevelILVarSsaField MediumLevelILVarSsaFieldRec
   | MediumLevelILGoto MediumLevelILGotoRec
   | MediumLevelILAdd MediumLevelILAddRec
@@ -1253,6 +1268,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILTestBit MediumLevelILTestBitRec
   | MediumLevelILSetVarSplit MediumLevelILSetVarSplitRec
   | MediumLevelILCallParamSsa MediumLevelILCallParamSsaRec
+  | MediumLevelILCallParam MediumLevelILCallParamRec
   | MediumLevelILSetVar MediumLevelILSetVarRec
   | MediumLevelILAssert MediumLevelILAssertRec
   | MediumLevelILForceVer MediumLevelILForceVerRec
@@ -1276,6 +1292,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILAssertSsa MediumLevelILAssertSsaRec
   | MediumLevelILForceVerSsa MediumLevelILForceVerSsaRec
   | MediumLevelILCallUntypedSsa MediumLevelILCallUntypedSsaRec
+  | MediumLevelILCallUntyped MediumLevelILCallUntypedRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -1337,11 +1354,12 @@ create func exprIndex' = do
     MLIL_ASSERT -> do
       src' <- varFromID $ fromIntegral $ getOp rawInst 0
       constraint' <- getConstraint func rawInst 1
-      let rec = MediumLevelILAssertRec
-                { src = src',
-                  constraint = constraint',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILAssertRec
+              { src = src',
+                constraint = constraint',
+                core = coreInst
+              }
       return $ MediumLevelILAssert rec
     MLIL_FORCE_VER -> do
       dest' <- varFromID $ fromIntegral $ getOp rawInst 0
@@ -1355,39 +1373,43 @@ create func exprIndex' = do
       return $ MediumLevelILForceVer rec
     MLIL_LOAD -> do
       src' <- getExpr func $ getOp rawInst 0
-      let rec = MediumLevelILLoadRec
-                { src = src',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILLoadRec
+              { src = src',
+                core = coreInst
+              }
       return $ MediumLevelILLoad rec
     MLIL_LOAD_STRUCT -> do
       src' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
-      let rec = MediumLevelILLoadStructRec
-                { src = src',
-                  offset = offset',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILLoadStructRec
+              { src = src',
+                offset = offset',
+                core = coreInst
+              }
       return $ MediumLevelILLoadStruct rec
     MLIL_STORE -> do
       src' <- getExpr func $ getOp rawInst 0
       dest' <- getExpr func $ getOp rawInst 1
-      let rec = MediumLevelILStoreRec
-                { src = src',
-                  dest = dest',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILStoreRec
+              { src = src',
+                dest = dest',
+                core = coreInst
+              }
       return $ MediumLevelILStore rec
     MLIL_STORE_STRUCT -> do
       src' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
       dest' <- getExpr func $ getOp rawInst 2
-      let rec = MediumLevelILStoreStructRec
-                { src = src',
-                  offset = offset',
-                  dest = dest',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILStoreStructRec
+              { src = src',
+                offset = offset',
+                dest = dest',
+                core = coreInst
+              }
       return $ MediumLevelILStoreStruct rec
     MLIL_VAR -> do
       src' <- varFromID $ fromIntegral $ getOp rawInst 0
@@ -1824,11 +1846,41 @@ create func exprIndex' = do
               }
       return $ MediumLevelILCall rec
     MLIL_CALL_UNTYPED -> do
-      error $ ("Unimplemented: " ++ show "MLIL_CALL_UNTYPED")
+      outputInst <- getExpr func $ getOp rawInst 0
+      output' <- case outputInst of
+        MediumLevelILCallOutput (MediumLevelILCallOutputRec {dest = d}) -> return d
+        _ ->
+          error $
+            "create: Output of MediumLevelILCallUntypedSsa: expected MediumLevelILCallOutputSsa : "
+              ++ show outputInst
+      dest' <- getExpr func $ getOp rawInst 1
+      paramsInst <- getExpr func $ getOp rawInst 2
+      params' <- case paramsInst of
+        MediumLevelILCallParam (MediumLevelILCallParamRec {src = s}) -> return s
+        _ ->
+          error $
+            "create: Params of MediumLevelILCallUntypedSsa: expected MediumLevelILCallParamsSsa : "
+              ++ show outputInst
+      stack' <- getExpr func $ getOp rawInst 3
+      let rec =
+            MediumLevelILCallUntypedRec
+              { output = output',
+                dest = dest',
+                params = params',
+                stack = stack',
+                core = coreInst
+              }
+      return $ MediumLevelILCallUntyped rec
     MLIL_CALL_OUTPUT -> do
       error $ ("Unimplemented: " ++ show "MLIL_CALL_OUTPUT")
     MLIL_CALL_PARAM -> do
-      error $ ("Unimplemented: " ++ show "MLIL_CALL_PARAM")
+      src' <- getExprList func exprIndex' 0
+      let rec =
+            MediumLevelILCallParamRec
+              { src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILCallParam rec
     MLIL_SEPARATE_PARAM_LIST -> do
       error $ ("Unimplemented: " ++ show "MLIL_SEPARATE_PARAM_LIST")
     MLIL_SHARED_PARAM_SLOT -> do
@@ -2019,10 +2071,11 @@ create func exprIndex' = do
       return $ MediumLevelILUnimpl $ MediumLevelILUnimplRec {core = coreInst}
     MLIL_UNIMPL_MEM -> do
       src' <- getExpr func $ getOp rawInst 0
-      let rec = MediumLevelILUnimplMemRec
-                { src =  src',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILUnimplMemRec
+              { src = src',
+                core = coreInst
+              }
       return $ MediumLevelILUnimplMem rec
     MLIL_FADD -> do
       left' <- getExpr func $ getOp rawInst 0
@@ -2336,20 +2389,22 @@ create func exprIndex' = do
     MLIL_ASSERT_SSA -> do
       src' <- getSSAVar rawInst 0 1
       constraint' <- getConstraint func rawInst 2
-      let rec = MediumLevelILAssertSsaRec
-                { src = src',
-                  constraint = constraint',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILAssertSsaRec
+              { src = src',
+                constraint = constraint',
+                core = coreInst
+              }
       return $ MediumLevelILAssertSsa rec
     MLIL_FORCE_VER_SSA -> do
       dest' <- getSSAVar rawInst 0 1
       src' <- getSSAVar rawInst 2 3
-      let rec = MediumLevelILForceVerSsaRec
-                { dest = dest',
-                  src = src',
-                  core = coreInst
-                }
+      let rec =
+            MediumLevelILForceVerSsaRec
+              { dest = dest',
+                src = src',
+                core = coreInst
+              }
       return $ MediumLevelILForceVerSsa rec
     MLIL_CALL_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
@@ -2388,7 +2443,7 @@ create func exprIndex' = do
       dest' <- getExpr func $ getOp rawInst 1
       paramsInst <- getExpr func $ getOp rawInst 2
       (params', paramsSrcMemory') <- case paramsInst of
-        MediumLevelILCallParamSsa (MediumLevelILCallParamSsaRec {src = s', srcMemory = sm' }) -> return (s',sm')
+        MediumLevelILCallParamSsa (MediumLevelILCallParamSsaRec {src = s', srcMemory = sm'}) -> return (s', sm')
         _ ->
           error $
             "create: Params of MediumLevelILCallUntypedSsa: expected MediumLevelILCallParamsSsa : "
@@ -2439,7 +2494,15 @@ create func exprIndex' = do
     MLIL_TAILCALL_UNTYPED_SSA -> do
       error $ ("Unimplemented: " ++ show "MLIL_TAILCALL_UNTYPED_SSA")
     MLIL_CALL_PARAM_SSA -> do
-      error $ ("Unimplemented: " ++ show "MLIL_CALL_PARAM_SSA")
+      srcMemory' <- getInt rawInst 0
+      src' <- getExprList func exprIndex' 1
+      let rec =
+            MediumLevelILCallParamSsaRec
+              { srcMemory = srcMemory',
+                src = src',
+                core = coreInst
+              }
+      return $ MediumLevelILCallParamSsa rec
     MLIL_CALL_OUTPUT_SSA -> do
       destMemory' <- getInt rawInst 0
       dest' <- getSSAVarList func exprIndex' 1
