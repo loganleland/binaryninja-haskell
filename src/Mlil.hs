@@ -1195,6 +1195,14 @@ data MediumLevelILSyscallUntypedRec = MediumLevelILSyscallUntypedRec
   }
   deriving (Show)
 
+data MediumLevelILTailcallRec = MediumLevelILTailcallRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
 data MediumLevelILSSAInstruction
   = MediumLevelILCallSsa MediumLevelILCallSsaRec
   | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
@@ -1324,6 +1332,7 @@ data MediumLevelILSSAInstruction
   | MediumLevelILSharedParamSlot MediumLevelILSharedParamSlotRec
   | MediumLevelILSyscall MediumLevelILSyscallRec
   | MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
+  | MediumLevelILTailcall MediumLevelILTailcallRec
   deriving (Show)
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
@@ -2127,7 +2136,17 @@ create func exprIndex' = do
               }
       return $ MediumLevelILSyscallUntyped rec
     MLIL_TAILCALL -> do
-      error $ ("Unimplemented: " ++ show "MLIL_TAILCALL")
+      output' <- getVarList func exprIndex' 0
+      dest' <- getExpr func $ getOp rawInst 2
+      params' <- getExprList func exprIndex' 3
+      let rec =
+            MediumLevelILTailcallRec
+              { output = output',
+                dest = dest',
+                params = params',
+                core = coreInst
+              }
+      return $ MediumLevelILTailcall rec
     MLIL_TAILCALL_UNTYPED -> do
       error $ ("Unimplemented: " ++ show "MLIL_TAILCALL_UNTYPED")
     MLIL_INTRINSIC -> do
