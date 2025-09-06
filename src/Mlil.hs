@@ -1872,7 +1872,13 @@ create func exprIndex' = do
               }
       return $ MediumLevelILCallUntyped rec
     MLIL_CALL_OUTPUT -> do
-      error $ ("Unimplemented: " ++ show "MLIL_CALL_OUTPUT")
+      dest' <- getVarList func exprIndex' 0
+      let rec =
+            MediumLevelILCallOutputRec
+              { dest = dest',
+                core = coreInst
+              }
+      return $ MediumLevelILCallOutput rec
     MLIL_CALL_PARAM -> do
       src' <- getExprList func exprIndex' 0
       let rec =
