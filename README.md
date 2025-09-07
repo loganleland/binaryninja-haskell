@@ -5,9 +5,11 @@ Haskell bindings for binary ninja with support for the medium level SSA intermed
 Symlink binary ninja core shared objects to package root.
 
 For example on MacOS:
-```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.dylib libbinaryninjacore.dylib```
-```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.1.dylib libbinaryninjacore.1.dylib```
 
+- ```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.dylib libbinaryninjacore.dylib```
+- ```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.1.dylib libbinaryninjacore.1.dylib```
+
+Or pass stack the directory where libbinaryninjacore is located.
 
 Then build and exec the demo (after changing the path to your license and binary/bndb of interest) with stack.
 - stack init
