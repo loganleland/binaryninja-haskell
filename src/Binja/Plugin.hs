@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Plugin
+module Binja.Plugin
   ( initPlugins,
     getInstallDirectory,
     getBundledPluginDirectory,
@@ -10,9 +10,9 @@ module Plugin
   )
 where
 
+import Binja.Types
+import Binja.Utils
 import Data.Bool (bool)
-import Types
-import Utils
 
 foreign import ccall "BNInitPlugins"
   c_BNInitPlugins :: CBool -> IO CBool

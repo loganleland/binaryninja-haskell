@@ -1,14 +1,14 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Mlil
-  ( Mlil.fromRef,
-    Mlil.instructions,
+module Binja.Mlil
+  ( Binja.Mlil.fromRef,
+    Binja.Mlil.instructions,
   )
 where
 
-import BinaryView
-import Function
-import Types
+import Binja.BinaryView
+import Binja.Function
+import Binja.Types
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart ::
@@ -221,7 +221,7 @@ getTargetMap func expr operand =
 getIntrinsicIL :: BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO ILIntrinsic
 getIntrinsicIL inst func operand = do
   let index' = getOp inst operand
-  rawFunc <- Function.mlilToRawFunction func
+  rawFunc <- Binja.Function.mlilToRawFunction func
   let arch' = architecture rawFunc
   archTy <- getArch arch'
   intrinsic' <- getIntrinsic archTy index'
@@ -294,7 +294,7 @@ instructionsFromFunc func = do
 
 instructions :: BNBinaryViewPtr -> IO [MediumLevelILSSAInstruction]
 instructions view = do
-  rawFuncs <- BinaryView.functions view
+  rawFuncs <- Binja.BinaryView.functions view
   mlilFuncs <- mapM mlil rawFuncs
   allInsts <- mapM instructionsFromFunc mlilFuncs
   return $ concat allInsts
@@ -1608,7 +1608,7 @@ create func exprIndex' = do
               }
       return $ MediumLevelILConst rec
     MLIL_CONST_DATA -> do
-      rawFunc <- Function.mlilToRawFunction func
+      rawFunc <- Binja.Function.mlilToRawFunction func
       constant' <- getConstantData rawFunc rawInst 0 1
       let rec =
             MediumLevelILConstDataRec

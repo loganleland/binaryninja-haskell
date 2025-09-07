@@ -1,10 +1,10 @@
-module Utils
+module Binja.Utils
   ( toBool,
     ptrToMaybe,
   )
 where
 
-import Types
+import Binja.Types
 
 toBool :: CBool -> Bool
 toBool (CBool 0) = False

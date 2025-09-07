@@ -1,11 +1,16 @@
 name: binaryninja-haskell
 version: 0.1
 synopsis: Bindings for binaryninja api
-description: Bindings for binaryninja api
 category: FFI
 license: MIT
 author: Logan Leland
 maintainer: logan@leland.zip
+stability: alpha
+tested-with:
+  GHC==9.12
+
+description: Bindings for binaryninja api
+
 extra-source-files:
 - README.md
 dependencies:
@@ -14,22 +19,45 @@ dependencies:
 - base64-bytestring
 - text
 
+library:
+  source-dirs: src
+  exposed-modules:
+    Binja.BinaryView
+    Binja.FFI
+    Binja.Llil
+    Binja.Mlil
+    Binja.Function
+    Binja.Plugin
+    Binja.ReferenceSource
+    Binja.Symbol
+    Binja.Types
+    Binja.Utils
+  other-modules: []
+  ghc-options:
+    - -Wall
+    - -threaded
+  ld-options:
+    - -Wl,-rpath,${pkgroot} # for macOS
+    - -Wl,-rpath,. # for macOS
+  c-sources:
+    - cbits/wrapper.c
+  include-dirs:
+    - cbits
+  extra-libraries:
+    - binaryninjacore
+
 executables:
-  binaryninja-demo:
+  example:
     main: Main.hs
-    source-dirs: src
+    source-dirs: example
     ghc-options:
       - -Wall
       - -threaded
     ld-options:
-      - -Wl,-rpath,./lib # for macOS
+      - -Wl,-rpath,${pkgroot} # for macOS
       - -Wl,-rpath,. # for macOS
-    c-sources:
-      - cbits/wrapper.c
-    include-dirs:
-      - cbits
     extra-libraries:
       - binaryninjacore
-    extra-lib-dirs:
-      - ./lib
-tests: {}
+    dependencies:
+      - binaryninja-haskell
+

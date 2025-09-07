@@ -1,18 +1,18 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Llil
-  ( Llil.startIndex,
-    Llil.sourceFunc,
-    Llil.fromRef,
-    Llil.at,
+module Binja.Llil
+  ( Binja.Llil.startIndex,
+    Binja.Llil.sourceFunc,
+    Binja.Llil.fromRef,
+    Binja.Llil.at,
   )
 where
 
-import BinaryView (functionsContaining)
-import Function
-import ReferenceSource
-import Types
-import Utils (ptrToMaybe)
+import Binja.BinaryView (functionsContaining)
+import Binja.Function
+import Binja.ReferenceSource
+import Binja.Types
+import Binja.Utils (ptrToMaybe)
 
 foreign import ccall unsafe "BNGetLowLevelILOwnerFunction"
   c_BNGetLowLevelILOwnderFunction :: BNLlilFunctionPtr -> IO BNFunctionPtr
@@ -62,7 +62,7 @@ llilByIndex func index =
 -- Retrieve the best LLIL instruction for the address in BNReferenceSource
 fromRef :: BNReferenceSource -> IO (Maybe BNLowLevelILInstruction)
 fromRef ref = do
-  func <- Function.llil (bnFunc ref)
+  func <- Binja.Function.llil (bnFunc ref)
   sIndex <- startIndex func (bnArch ref) (bnAddr ref)
   case sIndex of
     Nothing -> return Nothing
@@ -73,8 +73,8 @@ fromRef ref = do
 at :: BNBinaryViewPtr -> Word64 -> IO (Maybe BNLowLevelILInstruction)
 at view addr = do
   rawFunc <- head <$> functionsContaining view addr
-  llilFunc <- Function.llil rawFunc
-  sIndex <- startIndex llilFunc (Function.architecture rawFunc) addr
+  llilFunc <- Binja.Function.llil rawFunc
+  sIndex <- startIndex llilFunc (Binja.Function.architecture rawFunc) addr
   case sIndex of
     Nothing -> return Nothing
     Just sIndex' -> do

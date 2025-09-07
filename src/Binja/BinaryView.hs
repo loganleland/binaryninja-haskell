@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module BinaryView
+module Binja.BinaryView
   ( load,
     save,
     hasFunctions,
@@ -14,17 +14,17 @@ module BinaryView
     functionsContaining,
     symbols,
     strings,
-    BinaryView.read,
+    Binja.BinaryView.read,
   )
 where
 
+import Binja.Plugin
+import Binja.Types
+import Binja.Utils
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
-import Plugin
-import Types
-import Utils
 
 --   BNBinaryView* BNLoadFilename(const char* const filename,
 --                                const bool updateAnalysis,
@@ -70,19 +70,19 @@ foreign import ccall "BNHasFunctions"
   c_BNHasFunctions :: BNBinaryViewPtr -> IO CBool
 
 hasFunctions :: BNBinaryViewPtr -> IO Bool
-hasFunctions = fmap Utils.toBool . c_BNHasFunctions
+hasFunctions = fmap Binja.Utils.toBool . c_BNHasFunctions
 
 foreign import ccall "BNHasSymbols"
   c_BNHasSymbols :: BNBinaryViewPtr -> CBool
 
 hasSymbols :: BNBinaryViewPtr -> Bool
-hasSymbols = Utils.toBool . c_BNHasSymbols
+hasSymbols = Binja.Utils.toBool . c_BNHasSymbols
 
 foreign import ccall "BNHasDataVariables"
   c_BNHasDataVariables :: BNBinaryViewPtr -> CBool
 
 hasDataVariables :: BNBinaryViewPtr -> Bool
-hasDataVariables = Utils.toBool . c_BNHasDataVariables
+hasDataVariables = Binja.Utils.toBool . c_BNHasDataVariables
 
 -- bool BNSaveToFilename(BNBinaryView* view, const char* filename)
 foreign import ccall "BNSaveToFilename"
@@ -94,7 +94,7 @@ save :: BNBinaryViewPtr -> String -> IO Bool
 save view filename =
   withCString filename $ \cFilename -> do
     result <- c_BNSaveToFilename view cFilename
-    return (Utils.toBool result)
+    return (Binja.Utils.toBool result)
 
 foreign import ccall "BNUpdateAnalysis"
   c_BNUpdateAnalysis :: BNBinaryViewPtr -> IO ()
@@ -220,7 +220,7 @@ strings view =
         refs <- peekArray count (castPtr arrPtr :: Ptr BNStringRef)
         c_BNFreeStringReferenceList arrPtr
         forM refs $ \(BNStringRef t s l) -> do
-          mbs <- BinaryView.read view s l
+          mbs <- Binja.BinaryView.read view s l
           return $ fmap (T.unpack . decodeByType t) mbs
 
 decodeByType :: BNStringType -> BS.ByteString -> T.Text

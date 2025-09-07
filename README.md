@@ -2,18 +2,17 @@
 Haskell bindings for binary ninja with support for the medium level SSA intermediate language.
 
 ## Build Instructions
-Symlink the local install of binary ninja to binaryninja-haskell/lib.
+Symlink binary ninja core shared objects to package root.
 
 For example on MacOS:
-```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS lib```
+```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.dylib libbinaryninjacore.dylib```
+```ln -s /Applications/Binary\ Ninja.app/Contents/MacOS/libbinaryninjacore.1.dylib libbinaryninjacore.1.dylib```
+
 
 Then build and exec the demo (after changing the path to your license and binary/bndb of interest) with stack.
 - stack init
-- stack build
-- stack exec binaryninja-demo
-
-The demo will be moved into a proper test prior to 1.0 release.
-
+- stack build --extra-lib-dirs "$(pwd)"
+- stack run example --extra-lib-dirs "$(pwd)"
 
 ## Version
 Currently targeting Binary Ninja Ultimate 5.1.8005-Stable.

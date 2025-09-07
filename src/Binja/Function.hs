@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Function
+module Binja.Function
   ( Function,
     start,
     highestAddress,
@@ -14,18 +14,18 @@ module Function
     hasUnresolvedIndirectBranches,
     getComment,
     setComment,
-    Function.llil,
-    Function.mlil,
-    Function.mlilToSSA,
-    Function.mlilSSA,
-    Function.mlilToRawFunction,
-    Function.print,
+    Binja.Function.llil,
+    Binja.Function.mlil,
+    Binja.Function.mlilToSSA,
+    Binja.Function.mlilSSA,
+    Binja.Function.mlilToRawFunction,
+    Binja.Function.print,
   )
 where
 
+import Binja.Types
+import Binja.Utils
 import Control.Monad (unless)
-import Types
-import Utils
 
 foreign import ccall unsafe "BNGetFunctionStart"
   c_BNGetFunctionStart :: BNFunctionPtr -> IO Word64
@@ -59,31 +59,31 @@ foreign import ccall unsafe "BNWasFunctionAutomaticallyDiscovered"
   c_BNWasFunctionAutomaticallyDiscovered :: BNFunctionPtr -> IO CBool
 
 auto :: BNFunctionPtr -> IO Bool
-auto = fmap Utils.toBool . c_BNWasFunctionAutomaticallyDiscovered
+auto = fmap Binja.Utils.toBool . c_BNWasFunctionAutomaticallyDiscovered
 
 foreign import ccall unsafe "BNFunctionHasUserAnnotations"
   c_BNFunctionHasUserAnnotations :: BNFunctionPtr -> IO CBool
 
 hasUserAnnotations :: BNFunctionPtr -> IO Bool
-hasUserAnnotations = fmap Utils.toBool . c_BNFunctionHasUserAnnotations
+hasUserAnnotations = fmap Binja.Utils.toBool . c_BNFunctionHasUserAnnotations
 
 foreign import ccall unsafe "BNFunctionHasExplicitlyDefinedType"
   c_BNFunctionHasExplicitlyDefinedType :: BNFunctionPtr -> IO CBool
 
 hasExplicitlyDefinedType :: BNFunctionPtr -> IO Bool
-hasExplicitlyDefinedType = fmap Utils.toBool . c_BNFunctionHasExplicitlyDefinedType
+hasExplicitlyDefinedType = fmap Binja.Utils.toBool . c_BNFunctionHasExplicitlyDefinedType
 
 foreign import ccall unsafe "BNIsFunctionUpdateNeeded"
   c_BNIsFunctionUpdateNeeded :: BNFunctionPtr -> IO CBool
 
 needsUpdate :: BNFunctionPtr -> IO Bool
-needsUpdate = fmap Utils.toBool . c_BNIsFunctionUpdateNeeded
+needsUpdate = fmap Binja.Utils.toBool . c_BNIsFunctionUpdateNeeded
 
 foreign import ccall unsafe "BNHasUnresolvedIndirectBranches"
   c_BNHasUnresolvedIndirectBranches :: BNFunctionPtr -> IO CBool
 
 hasUnresolvedIndirectBranches :: BNFunctionPtr -> IO Bool
-hasUnresolvedIndirectBranches = fmap Utils.toBool . c_BNHasUnresolvedIndirectBranches
+hasUnresolvedIndirectBranches = fmap Binja.Utils.toBool . c_BNHasUnresolvedIndirectBranches
 
 foreign import ccall "BNGetFunctionComment"
   c_BNGetFunctionComment :: BNFunctionPtr -> IO CString

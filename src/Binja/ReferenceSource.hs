@@ -1,12 +1,12 @@
-module ReferenceSource
-  ( ReferenceSource.codeRefs,
+module Binja.ReferenceSource
+  ( Binja.ReferenceSource.codeRefs,
     bnFunc,
     bnArch,
     bnAddr,
   )
 where
 
-import Types
+import Binja.Types
 
 data CodeReferenceList = CodeReferenceList
   { crArrayPtr :: !(ForeignPtr BNFunctionPtr),

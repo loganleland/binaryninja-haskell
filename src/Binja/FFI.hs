@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FFI where
+module Binja.FFI where
 
 import Foreign.C.String (CString, peekCString, withCString)
 

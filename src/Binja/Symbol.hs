@@ -1,22 +1,22 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Symbol
+module Binja.Symbol
   ( ty,
     binding,
     name,
     shortName,
     fullName,
-    Symbol.address,
+    Binja.Symbol.address,
     ordinal,
     auto,
-    Symbol.codeRefs,
-    Symbol.print,
+    Binja.Symbol.codeRefs,
+    Binja.Symbol.print,
   )
 where
 
-import qualified ReferenceSource as RS
-import Types
-import Utils
+import qualified Binja.ReferenceSource as RS
+import Binja.Types
+import Binja.Utils
 
 foreign import ccall "BNGetSymbolType"
   c_BNGetSymbolType :: BNSymbolPtr -> IO CInt
@@ -81,7 +81,7 @@ auto sym = do
 
 codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [BNReferenceSource]
 codeRefs view sym = do
-  addr <- Symbol.address sym
+  addr <- Binja.Symbol.address sym
   RS.codeRefs view addr
 
 print :: BNSymbolPtr -> IO ()
@@ -91,7 +91,7 @@ print sym = do
   b <- binding sym
   sname <- shortName sym
   fname <- fullName sym
-  addr <- Symbol.address sym
+  addr <- Binja.Symbol.address sym
   ord <- ordinal sym
   isAuto <- auto sym
   putStrLn "==============================="

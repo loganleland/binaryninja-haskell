@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Types
+module Binja.Types
   ( CSize (..),
     CBool (..),
     CInt (..),
@@ -72,7 +72,7 @@ module Types
     SymbolBinding (..),
     BNRegisterValueType (..),
     BNReferenceSource (..),
-    Types.alignmentS,
+    Binja.Types.alignmentS,
     getArch,
     getIntrinsic,
   )
@@ -221,7 +221,7 @@ data BNPossibleValueSet = BNPossibleValueSet
 
 instance Storable BNPossibleValueSet where
   sizeOf _ = 64
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     rvt <- toEnum . fromIntegral <$> (peekByteOff ptr 0 :: IO CInt)
     val <- peekByteOff ptr 8
@@ -260,7 +260,7 @@ data BNStringRef = BNStringRef
 
 instance Storable BNStringRef where
   sizeOf _ = 24
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     t <- toEnum . fromIntegral <$> (peekByteOff ptr 0 :: IO CInt)
     s <- peekByteOff ptr 8 :: IO Word64
@@ -280,7 +280,7 @@ data BNVariable = BNVariable
 
 instance Storable BNVariable where
   sizeOf _ = 16
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     t <- peekByteOff ptr 0 :: IO Word32
     r <- peekByteOff ptr 4 :: IO Word32
@@ -353,7 +353,7 @@ data BNLowLevelILInstruction = BNLowLevelILInstruction
 
 instance Storable BNLowLevelILInstruction where
   sizeOf _ = 64
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     op <- peekByteOff ptr 0
     attr <- peekByteOff ptr 4
@@ -400,7 +400,7 @@ data BNMediumLevelILInstruction = BNMediumLevelILInstruction
 
 instance Storable BNMediumLevelILInstruction where
   sizeOf _ = 72
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     op <- peekByteOff ptr 0 :: IO Word32
     attr <- peekByteOff ptr 4 :: IO Word32
@@ -485,7 +485,7 @@ instance Enum BNRegisterValueType where
 
 instance Storable BNReferenceSource where
   sizeOf _ = 24
-  alignment _ = Types.alignmentS
+  alignment _ = Binja.Types.alignmentS
   peek ptr = do
     f <- peekByteOff ptr 0 :: IO BNFunctionPtr
     a <- peekByteOff ptr 8 :: IO BNArchPtr

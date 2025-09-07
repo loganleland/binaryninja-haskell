@@ -1,11 +1,7 @@
--- Test program (To be moved to testing prior to first release)
-
 module Main where
 
-import BinaryView
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS8
-import FFI
+import Binja.BinaryView
+import Binja.FFI
   ( getLicensedUserEmail,
     getProduct,
     getProductType,
@@ -16,13 +12,15 @@ import FFI
     setLicense,
     shutdown,
   )
-import qualified Function
-import Llil
-import Mlil
-import Plugin
-import ReferenceSource
-import Symbol
-import Types
+import qualified Binja.Function
+import Binja.Llil
+import Binja.Mlil
+import Binja.Plugin
+import Binja.ReferenceSource
+import Binja.Symbol
+import Binja.Types
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 
 main :: IO ()
 main = do
@@ -46,9 +44,7 @@ main = do
   putStrLn ("getSettingsFileName: " ++ settingsFilename)
   installDirectory <- getInstallDirectory
   putStrLn ("getInstallDirectory : " ++ installDirectory)
-  -- Test BNLoadFileName
   let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
-  -- let filename = "TEST.bndb" -- Modify with a valid binary path
   let options = "{}" -- Example JSON options
   view <- load filename options
   if view == nullPtr
@@ -72,7 +68,7 @@ main = do
   -- mapM_ Prelude.print mlils
   --
   --
-  allInstructions <- Mlil.instructions view
+  allInstructions <- Binja.Mlil.instructions view
   mapM_ Prelude.print allInstructions
   shutdown
   putStrLn "Shutting Down...."
