@@ -16,11 +16,11 @@ Then build and exec the demo (after changing the path to your license and binary
 - stack build --extra-lib-dirs "$(pwd)"
 - stack run example --extra-lib-dirs "$(pwd)"
 
-## Version
-Currently targeting Binary Ninja Ultimate 5.1.8005-Stable.
-Once a 1.0 version is finished this repo will contain tags
-for each supported version of binary ninja.
+## Branches
+This repo tracks supported binja version via branches starting with v5.1.8005-Stable.
+Tested and implemented against an ultimate license install.
+
+The main branch tracks the current work-in-progress.
 
 ## Format
 All haskell files are formatted with https://github.com/tweag/ormolu .
-One way to accomplish this is executing: ```ormolu --mode inplace $(find . -name '*.hs')``` in the top level directory.
