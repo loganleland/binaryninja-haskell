@@ -70,6 +70,7 @@ module Binja.Types
     SymbolList (..),
     SymbolType (..),
     SymbolBinding (..),
+    Symbol(..),
     BNRegisterValueType (..),
     BNReferenceSource (..),
     Binja.Types.alignmentS,
@@ -327,6 +328,15 @@ data SymbolType
 
 data SymbolBinding = NoBinding | LocalBinding | GlobalBinding | WeakBinding
   deriving (Eq, Show, Enum)
+
+data Symbol = Symbol
+  { name :: String,
+    ty :: SymbolType,
+    binding :: SymbolBinding,
+    address :: Word64,
+    auto :: Bool
+  }
+  deriving (Show)
 
 data BNStringType = AsciiString | Utf16String | Utf32String | Utf8String
   deriving (Eq, Show, Enum)

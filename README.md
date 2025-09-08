@@ -24,4 +24,3 @@ The main branch tracks the current work-in-progress.
 
 ## Format
 All haskell files are formatted with https://github.com/tweag/ormolu
-

@@ -2,18 +2,18 @@
 
 module Binja.Function
   ( Function,
-    start,
-    highestAddress,
-    lowestAddress,
-    symbol,
-    auto,
-    architecture,
-    hasUserAnnotations,
-    hasExplicitlyDefinedType,
-    needsUpdate,
-    hasUnresolvedIndirectBranches,
-    getComment,
-    setComment,
+    Binja.Function.start,
+    Binja.Function.highestAddress,
+    Binja.Function.lowestAddress,
+    Binja.Function.symbol,
+    Binja.Function.auto,
+    Binja.Function.architecture,
+    Binja.Function.hasUserAnnotations,
+    Binja.Function.hasExplicitlyDefinedType,
+    Binja.Function.needsUpdate,
+    Binja.Function.hasUnresolvedIndirectBranches,
+    Binja.Function.getComment,
+    Binja.Function.setComment,
     Binja.Function.llil,
     Binja.Function.mlil,
     Binja.Function.mlilToSSA,
@@ -25,6 +25,7 @@ where
 
 import Binja.Types
 import Binja.Utils
+import Binja.Symbol
 import Control.Monad (unless)
 
 foreign import ccall unsafe "BNGetFunctionStart"
@@ -48,12 +49,12 @@ lowestAddress = c_BNGetFunctionLowestAddress
 foreign import ccall unsafe "BNGetFunctionSymbol"
   c_BNGetFunctionSymbol :: BNFunctionPtr -> IO BNSymbolPtr
 
-symbol :: BNFunctionPtr -> IO BNSymbolPtr
+symbol :: BNFunctionPtr -> IO Symbol
 symbol func = do
   p <- c_BNGetFunctionSymbol func
   if p == nullPtr
     then error "c_BNGetFunctionSymbol returned null"
-    else return p
+    else Binja.Symbol.create p
 
 foreign import ccall unsafe "BNWasFunctionAutomaticallyDiscovered"
   c_BNWasFunctionAutomaticallyDiscovered :: BNFunctionPtr -> IO CBool
@@ -164,7 +165,7 @@ print func = do
   hi <- highestAddress func
   lo <- lowestAddress func
   mSym <- symbol func
-  isAuto <- auto func
+  isAuto <- Binja.Function.auto func
   userAnn <- hasUserAnnotations func
   explTy <- hasExplicitlyDefinedType func
   upd <- needsUpdate func

@@ -1,14 +1,8 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Binja.Symbol
-  ( ty,
-    binding,
-    name,
-    shortName,
-    fullName,
-    Binja.Symbol.address,
-    ordinal,
-    auto,
+  ( Binja.Symbol.create,
     Binja.Symbol.codeRefs,
     Binja.Symbol.print,
   )
@@ -84,16 +78,31 @@ codeRefs view sym = do
   addr <- Binja.Symbol.address sym
   RS.codeRefs view addr
 
+create :: BNSymbolPtr -> IO Symbol
+create sym = do
+  nameStr <- Binja.Symbol.name sym
+  t <- Binja.Symbol.ty sym
+  b <- Binja.Symbol.binding sym
+  addr <- Binja.Symbol.address sym
+  a <- Binja.Symbol.auto sym
+  return Binja.Types.Symbol
+          { name = nameStr,
+            ty = t,
+            binding = b,
+            address = addr,
+            auto = a
+          }
+
 print :: BNSymbolPtr -> IO ()
 print sym = do
-  nameStr <- name sym
-  t <- ty sym
-  b <- binding sym
-  sname <- shortName sym
-  fname <- fullName sym
+  nameStr <- Binja.Symbol.name sym
+  t <- Binja.Symbol.ty sym
+  b <- Binja.Symbol.binding sym
+  sname <- Binja.Symbol.shortName sym
+  fname <- Binja.Symbol.fullName sym
   addr <- Binja.Symbol.address sym
-  ord <- ordinal sym
-  isAuto <- auto sym
+  ord <- Binja.Symbol.ordinal sym
+  isAuto <- Binja.Symbol.auto sym
   putStrLn "==============================="
   putStrLn ("Name      : " ++ nameStr)
   putStrLn ("Type      : " ++ show t)
