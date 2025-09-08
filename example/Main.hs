@@ -24,8 +24,8 @@ import qualified Data.ByteString.Char8 as BS8
 
 main :: IO ()
 main = do
-  --licenseData <- BS.readFile "/Users/leland/Downloads/license.txt"
-  --setLicense $ BS8.unpack licenseData
+  -- licenseData <- BS.readFile "/Users/leland/Downloads/license.txt"
+  -- setLicense $ BS8.unpack licenseData
   productStr <- getProduct
   putStrLn $ "Product: " ++ productStr
   productTypeStr <- getProductType
