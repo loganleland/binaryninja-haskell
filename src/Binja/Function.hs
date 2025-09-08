@@ -175,7 +175,7 @@ print func = do
   putStrLn $ "  start: " ++ show s
   putStrLn $ "  lowestAddress: " ++ show lo
   putStrLn $ "  highestAddress: " ++ show hi
-  putStrLn $ "  yymbol: " ++ show mSym
+  putStrLn $ "  symbol: " ++ show mSym
   putStrLn $ "  automaticallyDiscovered: " ++ show isAuto
   putStrLn $ "  hasUserAnnotations: " ++ show userAnn
   putStrLn $ "  hasExplicitlyDefinedType: " ++ show explTy
