@@ -27,9 +27,9 @@ void BNFromVariableIdentifierPtr(BNVariable* out, uint64_t index)
 }
 
 
-BNPossibleValueSet* BNGetCachedMediumLevelILPossibleValueSetPtr(BNPossibleValueSet* out,
-                                                                BNMediumLevelILFunction* func, size_t idx)
+void BNGetCachedMediumLevelILPossibleValueSetPtr(BNPossibleValueSet* out,
+                                                 BNMediumLevelILFunction* func, size_t i)
 {
-  *out = BNGetCachedMediumLevelILPossibleValueSet(func, idx);
+  *out = BNGetCachedMediumLevelILPossibleValueSet(func, i);
 }
 
