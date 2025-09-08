@@ -24,8 +24,8 @@ import qualified Data.ByteString.Char8 as BS8
 
 main :: IO ()
 main = do
-  licenseData <- BS.readFile "/Users/leland/Downloads/license.txt"
-  setLicense $ BS8.unpack licenseData
+  --licenseData <- BS.readFile "/Users/leland/Downloads/license.txt"
+  --setLicense $ BS8.unpack licenseData
   productStr <- getProduct
   putStrLn $ "Product: " ++ productStr
   productTypeStr <- getProductType
@@ -45,7 +45,7 @@ main = do
   installDirectory <- getInstallDirectory
   putStrLn ("getInstallDirectory : " ++ installDirectory)
   let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
-  let options = "{}" -- Example JSON options
+  let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
   view <- load filename options
   if view == nullPtr
     then putStrLn "Failed to load binary view."
