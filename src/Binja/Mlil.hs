@@ -3,6 +3,7 @@
 module Binja.Mlil
   ( Binja.Mlil.fromRef,
     Binja.Mlil.instructions,
+    Binja.Mlil.instructionsFromFunc
   )
 where
 
@@ -229,17 +230,13 @@ getIntrinsicIL inst func operand = do
 
 foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
   c_BNGetCachedMediumLevelILPossibleValueSetPtr ::
-    BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
-
-foreign import ccall unsafe "freeBNPossibleValueSet"
-  c_freeBNPossibleValueSet :: (Ptr BNPossibleValueSet) -> IO ()
+    Ptr BNPossibleValueSet -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
 
 getConstraint :: BNMlilSSAFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
 getConstraint func inst operand = do
-  possibleValuePtr <- c_BNGetCachedMediumLevelILPossibleValueSetPtr func constraintIndex
-  possibleValue <- peek possibleValuePtr
-  c_freeBNPossibleValueSet possibleValuePtr
-  return possibleValue
+  alloca $ \p -> do
+    _ <- c_BNGetCachedMediumLevelILPossibleValueSetPtr p func constraintIndex
+    peek p
   where
     constraintIndex = getOp inst operand
 

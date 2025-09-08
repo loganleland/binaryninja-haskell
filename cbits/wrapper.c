@@ -27,19 +27,9 @@ void BNFromVariableIdentifierPtr(BNVariable* out, uint64_t index)
 }
 
 
-BNPossibleValueSet* BNGetCachedMediumLevelILPossibleValueSetPtr(BNMediumLevelILFunction* func, size_t idx)
+BNPossibleValueSet* BNGetCachedMediumLevelILPossibleValueSetPtr(BNPossibleValueSet* out,
+                                                                BNMediumLevelILFunction* func, size_t idx)
 {
-  BNPossibleValueSet tmp = BNGetCachedMediumLevelILPossibleValueSet(func, idx);
-  BNPossibleValueSet* out = (BNPossibleValueSet*)malloc(sizeof (struct BNPossibleValueSet));
-  if (!out) return 0;
-  *out = tmp;
-  return out;
+  *out = BNGetCachedMediumLevelILPossibleValueSet(func, idx);
 }
-
-
-void freeBNPossibleValueSet(BNPossibleValueSet* vs)
-{
-  free(vs);
-}
-
 
