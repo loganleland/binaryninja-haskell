@@ -1,6 +1,8 @@
 name: binaryninja-haskell
 version: 0.1
 synopsis: Bindings for binaryninja api
+bug-reports: https://github.com/loganleland/binaryninja-haskell/issues
+homepage: https://github.com/loganleland/binaryninja-haskell
 category: FFI
 license: MIT
 author: Logan Leland
