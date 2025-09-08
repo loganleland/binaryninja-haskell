@@ -21,10 +21,10 @@ import Binja.Symbol
 import Binja.Types
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
-import Text.Read (Lexeme(Symbol))
 
 main :: IO ()
 main = do
+  -- Example of reading license file and setting license
   -- licenseData <- BS.readFile "/Users/leland/Downloads/license.txt"
   -- setLicense $ BS8.unpack licenseData
   productStr <- getProduct
@@ -63,10 +63,10 @@ main = do
   -- mlilSSAInstructions <- mapM Mlil.instructions mlilSSAFuncs
   -- Prelude.print mlilSSAInstructions
 
-  -- Get code refs for address 4462920
-  -- codeRef <- ReferenceSource.codeRefs view 4462920
-  -- mlils <- mapM Mlil.fromRef codeRef
-  -- mapM_ Prelude.print mlils
+  -- Get code refs for address 4295938392
+  --codeRef <- Binja.ReferenceSource.codeRefs view 4295938392
+  --mlils <- mapM Binja.Mlil.fromRef codeRef
+  --mapM_ Prelude.print mlils
   --
   --
   -- Get all mlil ssa instructions then print
@@ -74,7 +74,7 @@ main = do
   --mapM_ Prelude.print allInstructions
   ---
   -- Get all symbols then print
-  symbols <- Binja.BinaryView.symbols view
-  Prelude.print symbols
+  --symbols <- Binja.BinaryView.symbols view
+  --Prelude.print symbols
   shutdown
   putStrLn "Shutting Down...."
