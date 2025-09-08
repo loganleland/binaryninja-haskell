@@ -21,6 +21,7 @@ import Binja.Symbol
 import Binja.Types
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
+import Text.Read (Lexeme(Symbol))
 
 main :: IO ()
 main = do
@@ -68,7 +69,12 @@ main = do
   -- mapM_ Prelude.print mlils
   --
   --
-  allInstructions <- Binja.Mlil.instructions view
-  mapM_ Prelude.print allInstructions
+  -- Get all mlil ssa instructions then print
+  --allInstructions <- Binja.Mlil.instructions view
+  --mapM_ Prelude.print allInstructions
+  ---
+  -- Get all symbols then print
+  symbols <- Binja.BinaryView.symbols view
+  Prelude.print symbols
   shutdown
   putStrLn "Shutting Down...."

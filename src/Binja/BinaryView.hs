@@ -21,6 +21,7 @@ where
 import Binja.Plugin
 import Binja.Types
 import Binja.Utils
+import Binja.Symbol
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -160,8 +161,8 @@ foreign import ccall unsafe "BNGetSymbols"
 foreign import ccall unsafe "BNFreeSymbolList"
   c_BNFreeSymbolList :: Ptr BNSymbolPtr -> CSize -> IO ()
 
-getSymbolList :: BNBinaryViewPtr -> IO SymbolList
-getSymbolList view =
+symbols :: BNBinaryViewPtr -> IO [Symbol]
+symbols view =
   alloca $ \countPtr -> do
     rawPtr <- c_BNGetSymbols view countPtr nullPtr
     count <- fromIntegral <$> peek countPtr
@@ -170,16 +171,7 @@ getSymbolList view =
         then return []
         else peekArray count rawPtr
     arrPtr <- newForeignPtr rawPtr (c_BNFreeSymbolList rawPtr (fromIntegral count))
-    pure
-      SymbolList
-        { slArrayPtr = arrPtr,
-          slCount = count,
-          slList = xs,
-          slViewPtr = view
-        }
-
-symbols :: BNBinaryViewPtr -> IO [BNSymbolPtr]
-symbols = fmap slList . getSymbolList
+    mapM Binja.Symbol.create xs
 
 foreign import ccall unsafe "BNGetAnalysisFunctionsContainingAddress"
   c_BNGetAnalysisFunctionsContainingAddress ::
