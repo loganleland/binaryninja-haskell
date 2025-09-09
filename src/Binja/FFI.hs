@@ -4,6 +4,19 @@ module Binja.FFI where
 
 import Binja.Types
 
+foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
+  c_BNGetCachedMediumLevelILPossibleValueSetPtr ::
+    Ptr BNPossibleValueSet -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
+
+foreign import ccall unsafe "BNGetConstantData"
+  c_BNGetConstantData ::
+    BNFunctionPtr ->
+    CSize ->
+    CSize ->
+    CSize ->
+    Ptr CInt ->
+    IO BNDataBufferPtr
+
 foreign import ccall unsafe "BNGetCodeReferences"
   c_BNGetCodeReferences ::
     BNBinaryViewPtr ->
@@ -157,6 +170,13 @@ foreign import ccall unsafe "BNFreeSymbolList"
 
 foreign import ccall unsafe "BNGetAnalysisFunctionsContainingAddress"
   c_BNGetAnalysisFunctionsContainingAddress ::
+    BNBinaryViewPtr ->
+    Word64 ->
+    Ptr CSize ->
+    IO (Ptr BNFunctionPtr)
+
+foreign import ccall unsafe "BNGetAnalysisFunctionsForAddress"
+  c_BNGetAnalysisFunctionsForAddress ::
     BNBinaryViewPtr ->
     Word64 ->
     Ptr CSize ->

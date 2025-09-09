@@ -14,7 +14,6 @@ data CodeReferenceList = CodeReferenceList
   }
   deriving (Eq, Show)
 
--- binary view -> address -> code references
 codeRefs :: BNBinaryViewPtr -> Word64 -> IO [BNReferenceSource]
 codeRefs view addr =
   alloca $ \countPtr -> do

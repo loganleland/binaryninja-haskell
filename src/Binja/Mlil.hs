@@ -2,6 +2,7 @@
 
 module Binja.Mlil
   ( Binja.Mlil.fromRef,
+    Binja.Mlil.callerSites,
     Binja.Mlil.instructions,
     Binja.Mlil.instructionsFromFunc,
   )
@@ -10,6 +11,7 @@ where
 import Binja.BinaryView
 import Binja.FFI
 import Binja.Function
+import Binja.ReferenceSource
 import Binja.Types
 
 -- c_BNMediumLevelILGetInstructionStart is not be well defined
@@ -145,15 +147,6 @@ getFloat inst index' =
     w32 = fromIntegral $ w64 .&. 0xffffffff :: Word32
     value = getOp inst index'
 
-foreign import ccall unsafe "BNGetConstantData"
-  c_BNGetConstantData ::
-    BNFunctionPtr ->
-    CSize ->
-    CSize ->
-    CSize ->
-    Ptr CInt ->
-    IO BNDataBufferPtr
-
 -- TODO: Lift BNDataBufferPtr into a higher type.
 -- Currently this is uniquely used by MediumLevelILConstData
 getConstantData :: BNFunctionPtr -> BNMediumLevelILInstruction -> CSize -> CSize -> IO BNDataBufferPtr
@@ -188,10 +181,6 @@ getIntrinsicIL inst func operand = do
   archTy <- getArch arch'
   intrinsic' <- getIntrinsic archTy index'
   return $ ILIntrinsic index' arch' archTy intrinsic'
-
-foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
-  c_BNGetCachedMediumLevelILPossibleValueSetPtr ::
-    Ptr BNPossibleValueSet -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
 
 getConstraint :: BNMlilSSAFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
 getConstraint func inst operand = do
@@ -236,6 +225,18 @@ instructions view = do
   mlilFuncs <- mapM mlil rawFuncs
   allInsts <- mapM instructionsFromFunc mlilFuncs
   return $ concat allInsts
+
+callerSites :: BNBinaryViewPtr -> BNMlilSSAFunctionPtr -> IO [MediumLevelILSSAInstruction]
+callerSites view func = do
+  rawFunc <- mlilToRawFunction func
+  start' <- start rawFunc
+  refs' <- Binja.ReferenceSource.codeRefs view start'
+  insts' <- mapM Binja.Mlil.fromRef refs'
+  return $ filter isLocalcall insts'
+  where
+    isLocalcall :: MediumLevelILSSAInstruction -> Bool
+    isLocalcall (Localcall _) = True
+    isLocalcall _ = False
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
 getOp inst operand =

@@ -4,11 +4,12 @@ module Binja.Symbol
   ( Binja.Symbol.create,
     Binja.Symbol.codeRefs,
     Binja.Symbol.print,
+    Binja.Symbol.isFunction,
   )
 where
 
 import Binja.FFI
-import qualified Binja.ReferenceSource as RS
+import Binja.ReferenceSource
 import Binja.Types
 import Binja.Utils
 
@@ -52,7 +53,15 @@ auto sym = do
 codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [BNReferenceSource]
 codeRefs view sym = do
   addr <- Binja.Symbol.address sym
-  RS.codeRefs view addr
+  Binja.ReferenceSource.codeRefs view addr
+
+isFunction :: Symbol -> Bool
+isFunction sym =
+  case Binja.Types.ty sym of
+    FunctionSymbol -> True
+    ImportedFunctionSymbol -> True
+    LibraryFunctionSymbol -> True
+    _ -> False
 
 create :: BNSymbolPtr -> IO Symbol
 create sym = do

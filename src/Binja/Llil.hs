@@ -9,7 +9,6 @@ where
 import Binja.BinaryView (functionsContaining)
 import Binja.FFI
 import Binja.Function
-import Binja.ReferenceSource
 import Binja.Types
 import Binja.Utils (ptrToMaybe)
 

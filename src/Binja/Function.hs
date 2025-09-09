@@ -22,6 +22,7 @@ module Binja.Function
 where
 
 import Binja.FFI
+import Binja.ReferenceSource
 import Binja.Symbol
 import Binja.Types
 import Binja.Utils
