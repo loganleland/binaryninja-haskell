@@ -108,3 +108,24 @@ main = do
   mapM_ Prelude.print mlils
   shutdown
 ```
+
+### Accessing cross references
+```haskell
+module Main where
+
+import Binja.BinaryView
+import Binja.Function
+import Binja.Mlil
+import Binja.FFI (shutdown)
+
+main = do
+  let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
+  let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
+  view <- load filename options
+  -- Get function by address
+  singleFunc <- Binja.BinaryView.functionAt view 4295449218
+  singleFuncMlilSSA <- Binja.Function.mlilSSA singleFunc
+  refs' <- Binja.Mlil.callerSites view singleFuncMlilSSA
+  Prelude.print $ show $ length refs'
+  shutdown
+```
