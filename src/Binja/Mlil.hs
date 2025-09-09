@@ -3,13 +3,14 @@
 module Binja.Mlil
   ( Binja.Mlil.fromRef,
     Binja.Mlil.instructions,
-    Binja.Mlil.instructionsFromFunc
+    Binja.Mlil.instructionsFromFunc,
   )
 where
 
 import Binja.BinaryView
 import Binja.Function
 import Binja.Types
+import Binja.Types (MediumLevelILSSAInstruction)
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart ::
@@ -296,1143 +297,6 @@ instructions view = do
   allInsts <- mapM instructionsFromFunc mlilFuncs
   return $ concat allInsts
 
-data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
-  { instr :: BNMediumLevelILInstruction,
-    ilFunc :: BNMlilSSAFunctionPtr,
-    exprIndex :: CSize
-  }
-  deriving (Show)
-
-data MediumLevelILNopRec = MediumLevelILNopRec
-  {core :: CoreMediumLevelILInstruction}
-  deriving (Show)
-
-data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
-  { output :: [BNSSAVariable],
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
-  { destMemory :: Int,
-    dest :: [BNSSAVariable],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallOutputRec = MediumLevelILCallOutputRec
-  { dest :: [BNVariable],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallParamSsaRec = MediumLevelILCallParamSsaRec
-  { srcMemory :: Int,
-    src :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallParamRec = MediumLevelILCallParamRec
-  { src :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
-  { constant :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILConstRec = MediumLevelILConstRec
-  { constant :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRetRec = MediumLevelILRetRec
-  { src :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarSsaRec = MediumLevelILVarSsaRec
-  { src :: BNSSAVariable,
-    var :: BNSSAVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarSsaRec = MediumLevelILSetVarSsaRec
-  { dest :: BNSSAVariable,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILJumpRec = MediumLevelILJumpRec
-  { dest :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILTailcallSsaRec = MediumLevelILTailcallSsaRec
-  { output :: [BNSSAVariable],
-    outputDestMemory :: Int,
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILImportRec = MediumLevelILImportRec
-  { constant :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAddressOfRec = MediumLevelILAddressOfRec
-  { src :: BNVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAddressOfFieldRec = MediumLevelILAddressOfFieldRec
-  { src :: BNVariable,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLoadSsaRec = MediumLevelILLoadSsaRec
-  { src :: MediumLevelILSSAInstruction,
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILIfRec = MediumLevelILIfRec
-  { condition :: MediumLevelILSSAInstruction,
-    true :: Int, -- Instruction Index
-    false :: Int, -- Instruction Index
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpERec = MediumLevelILCmpERec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpSleRec = MediumLevelILCmpSleRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpNeRec = MediumLevelILCmpNeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpSltRec = MediumLevelILCmpSltRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpUltRec = MediumLevelILCmpUltRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpUleRec = MediumLevelILCmpUleRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpSgeRec = MediumLevelILCmpSgeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpUgeRec = MediumLevelILCmpUgeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpSgtRec = MediumLevelILCmpSgtRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCmpUgtRec = MediumLevelILCmpUgtRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAndRec = MediumLevelILAndRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILOrRec = MediumLevelILOrRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILXorRec = MediumLevelILXorRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLslRec = MediumLevelILLslRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLsrRec = MediumLevelILLsrRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAsrRec = MediumLevelILAsrRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRolRec = MediumLevelILRolRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRorRec = MediumLevelILRorRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMulRec = MediumLevelILMulRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMuluRec = MediumLevelILMuluRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMuluDpRec = MediumLevelILMuluDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMulsDpRec = MediumLevelILMulsDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILDivsRec = MediumLevelILDivsRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILDivuRec = MediumLevelILDivuRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILDivuDpRec = MediumLevelILDivuDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILDivsDpRec = MediumLevelILDivsDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILModuRec = MediumLevelILModuRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILModuDpRec = MediumLevelILModuDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILModsRec = MediumLevelILModsRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILModsDpRec = MediumLevelILModsDpRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAddOverflowRec = MediumLevelILAddOverflowRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILNoRetRec = MediumLevelILNoRetRec
-  { core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILStoreSsaRec = MediumLevelILStoreSsaRec
-  { dest :: MediumLevelILSSAInstruction,
-    destMemory :: Int,
-    srcMemory :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarSsaFieldRec = MediumLevelILSetVarSsaFieldRec
-  { dest :: BNSSAVariable,
-    prev :: BNSSAVariable,
-    offset :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarAliasedRec = MediumLevelILSetVarAliasedRec
-  { dest :: BNSSAVariable,
-    prev :: BNSSAVariable,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarSsaFieldRec = MediumLevelILVarSsaFieldRec
-  { src :: BNSSAVariable,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILGotoRec = MediumLevelILGotoRec
-  { dest :: Int, -- InstructionIndex
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAddRec = MediumLevelILAddRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSubRec = MediumLevelILSubRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILNegRec = MediumLevelILNegRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILNotRec = MediumLevelILNotRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSxRec = MediumLevelILSxRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILZxRec = MediumLevelILZxRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLowPartRec = MediumLevelILLowPartRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFsqrtRec = MediumLevelILFsqrtRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFnegRec = MediumLevelILFnegRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFabsRec = MediumLevelILFabsRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFloatToIntRec = MediumLevelILFloatToIntRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILIntToFloatRec = MediumLevelILIntToFloatRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFloatConvRec = MediumLevelILFloatConvRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRoundToIntRec = MediumLevelILRoundToIntRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFloorRec = MediumLevelILFloorRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCeilRec = MediumLevelILCeilRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFtruncRec = MediumLevelILFtruncRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILJumpToRec = MediumLevelILJumpToRec
-  { dest :: MediumLevelILSSAInstruction,
-    target :: TargetMap,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILIntrinsicSsaRec = MediumLevelILIntrinsicSsaRec
-  { output :: [BNSSAVariable],
-    intrinsic :: ILIntrinsic,
-    params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILIntrinsicRec = MediumLevelILIntrinsicRec
-  { output :: [BNVariable],
-    intrinsic :: ILIntrinsic,
-    params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILBoolToIntRec = MediumLevelILBoolToIntRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarAliasedRec = MediumLevelILVarAliasedRec
-  { src :: BNSSAVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarAliasedFieldRec = MediumLevelILVarAliasedFieldRec
-  { src :: BNSSAVariable,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarAliasedFieldRec = MediumLevelILSetVarAliasedFieldRec
-  { dest :: BNSSAVariable,
-    prev :: BNSSAVariable,
-    offset :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLoadStructSsaRec = MediumLevelILLoadStructSsaRec
-  { src :: MediumLevelILSSAInstruction,
-    offset :: Int,
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILStoreStructSsaRec = MediumLevelILStoreStructSsaRec
-  { dest :: MediumLevelILSSAInstruction,
-    offset :: Int,
-    destMemory :: Int,
-    srcMemory :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpERec = MediumLevelILFcmpERec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpNeRec = MediumLevelILFcmpNeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpLtRec = MediumLevelILFcmpLtRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpLeRec = MediumLevelILFcmpLeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpGeRec = MediumLevelILFcmpGeRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpGtRec = MediumLevelILFcmpGtRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpORec = MediumLevelILFcmpORec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFcmpUoRec = MediumLevelILFcmpUoRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFmulRec = MediumLevelILFmulRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFdivRec = MediumLevelILFdivRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFsubRec = MediumLevelILFsubRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFaddRec = MediumLevelILFaddRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILTestBitRec = MediumLevelILTestBitRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILConstDataRec = MediumLevelILConstDataRec
-  { constant :: BNDataBufferPtr,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFloatConstRec = MediumLevelILFloatConstRec
-  { constant :: Double,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAdcRec = MediumLevelILAdcRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    carry :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSbbRec = MediumLevelILSbbRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    carry :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRlcRec = MediumLevelILRlcRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    carry :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRrcRec = MediumLevelILRrcRec
-  { left :: MediumLevelILSSAInstruction,
-    right :: MediumLevelILSSAInstruction,
-    carry :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarRec = MediumLevelILSetVarRec
-  { dest :: BNVariable,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarFieldRec = MediumLevelILSetVarFieldRec
-  { dest :: BNVariable,
-    offset :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarSplitRec = MediumLevelILSetVarSplitRec
-  { high :: BNVariable,
-    low :: BNVariable,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAssertRec = MediumLevelILAssertRec
-  { src :: BNVariable,
-    constraint :: BNPossibleValueSet,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILAssertSsaRec = MediumLevelILAssertSsaRec
-  { src :: BNSSAVariable,
-    constraint :: BNPossibleValueSet,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILForceVerRec = MediumLevelILForceVerRec
-  { dest :: BNVariable,
-    src :: BNVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILForceVerSsaRec = MediumLevelILForceVerSsaRec
-  { dest :: BNSSAVariable,
-    src :: BNSSAVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLoadRec = MediumLevelILLoadRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILLoadStructRec = MediumLevelILLoadStructRec
-  { src :: MediumLevelILSSAInstruction,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILStoreRec = MediumLevelILStoreRec
-  { src :: MediumLevelILSSAInstruction,
-    dest :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILStoreStructRec = MediumLevelILStoreStructRec
-  { dest :: MediumLevelILSSAInstruction,
-    offset :: Int,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarRec = MediumLevelILVarRec
-  { src :: BNVariable,
-    var :: BNVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarFieldRec = MediumLevelILVarFieldRec
-  { src :: BNVariable,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarSplitRec = MediumLevelILVarSplitRec
-  { high :: BNVariable,
-    low :: BNVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILExternPtrRec = MediumLevelILExternPtrRec
-  { constant :: Int,
-    offset :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILRetHintRec = MediumLevelILRetHintRec
-  { dest :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallRec = MediumLevelILCallRec
-  { output :: [BNVariable],
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILBpRec = MediumLevelILBpRec
-  {core :: CoreMediumLevelILInstruction}
-  deriving (Show)
-
-data MediumLevelILTrapRec = MediumLevelILTrapRec
-  { vector :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILUndefRec = MediumLevelILUndefRec
-  {core :: CoreMediumLevelILInstruction}
-  deriving (Show)
-
-data MediumLevelILUnimplRec = MediumLevelILUnimplRec
-  {core :: CoreMediumLevelILInstruction}
-  deriving (Show)
-
-data MediumLevelILUnimplMemRec = MediumLevelILUnimplMemRec
-  { src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSetVarSplitSsaRec = MediumLevelILSetVarSplitSsaRec
-  { high :: BNSSAVariable,
-    low :: BNSSAVariable,
-    src :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarSplitSsaRec = MediumLevelILVarSplitSsaRec
-  { high :: BNSSAVariable,
-    low :: BNSSAVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallUntypedSsaRec = MediumLevelILCallUntypedSsaRec
-  { output :: [BNSSAVariable],
-    outputDestMemory :: Int,
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    paramsSrcMemory :: Int,
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILCallUntypedRec = MediumLevelILCallUntypedRec
-  { output :: [BNVariable],
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSeparateParamListRec = MediumLevelILSeparateParamListRec
-  { params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSharedParamSlotRec = MediumLevelILSharedParamSlotRec
-  { params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSyscallRec = MediumLevelILSyscallRec
-  { output :: [BNVariable],
-    params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSyscallUntypedRec = MediumLevelILSyscallUntypedRec
-  { output :: [BNVariable],
-    params :: [MediumLevelILSSAInstruction],
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILTailcallRec = MediumLevelILTailcallRec
-  { output :: [BNVariable],
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILTailcallUntypedRec = MediumLevelILTailcallUntypedRec
-  { output :: [BNVariable],
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFreeVarSlotRec = MediumLevelILFreeVarSlotRec
-  { dest :: BNVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSyscallSsaRec = MediumLevelILSyscallSsaRec
-  { output :: [BNSSAVariable],
-    outputDestMemory :: Int,
-    params :: [MediumLevelILSSAInstruction],
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSyscallUntypedSsaRec = MediumLevelILSyscallUntypedSsaRec
-  { output :: [BNSSAVariable],
-    outputDestMemory :: Int,
-    params :: [MediumLevelILSSAInstruction],
-    paramsSrcMemory :: Int,
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILTailcallUntypedSsaRec = MediumLevelILTailcallUntypedSsaRec
-  { output :: [BNSSAVariable],
-    outputDestMemory :: Int,
-    dest :: MediumLevelILSSAInstruction,
-    params :: [MediumLevelILSSAInstruction],
-    stack :: MediumLevelILSSAInstruction,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMemoryIntrinsicOutputSsaRec = MediumLevelILMemoryIntrinsicOutputSsaRec
-  { destMemory :: Int,
-    output :: [BNSSAVariable],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMemoryIntrinsicSsaRec = MediumLevelILMemoryIntrinsicSsaRec
-  { output :: [BNSSAVariable],
-    destMemory :: Int,
-    intrinsic :: ILIntrinsic,
-    params :: [MediumLevelILSSAInstruction],
-    srcMemory :: Int,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILFreeVarSlotSsaRec = MediumLevelILFreeVarSlotSsaRec
-  { dest :: BNSSAVariable,
-    prev :: BNSSAVariable,
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILVarPhiRec = MediumLevelILVarPhiRec
-  { dest :: BNSSAVariable,
-    src :: [BNSSAVariable],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILMemPhiRec = MediumLevelILMemPhiRec
-  { destMemory :: Int,
-    srcMemory :: [Int],
-    core :: CoreMediumLevelILInstruction
-  }
-  deriving (Show)
-
-data MediumLevelILSSAInstruction
-  = MediumLevelILCallSsa MediumLevelILCallSsaRec
-  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
-  | MediumLevelILCallOutput MediumLevelILCallOutputRec
-  | MediumLevelILConstPtr MediumLevelILConstPtrRec
-  | MediumLevelILNop MediumLevelILNopRec
-  | MediumLevelILRet MediumLevelILRetRec
-  | MediumLevelILVarSsa MediumLevelILVarSsaRec
-  | MediumLevelILSetVarSsa MediumLevelILSetVarSsaRec
-  | MediumLevelILJump MediumLevelILJumpRec
-  | MediumLevelILJumpTo MediumLevelILJumpToRec
-  | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
-  | MediumLevelILImport MediumLevelILImportRec
-  | MediumLevelILAddressOf MediumLevelILAddressOfRec
-  | MediumLevelILAddressOfField MediumLevelILAddressOfFieldRec
-  | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
-  | MediumLevelILConst MediumLevelILConstRec
-  | MediumLevelILIf MediumLevelILIfRec
-  | MediumLevelILCmpE MediumLevelILCmpERec
-  | MediumLevelILCmpNe MediumLevelILCmpNeRec
-  | MediumLevelILCmpSle MediumLevelILCmpSleRec
-  | MediumLevelILCmpSlt MediumLevelILCmpSltRec
-  | MediumLevelILCmpUlt MediumLevelILCmpUltRec
-  | MediumLevelILCmpUle MediumLevelILCmpUleRec
-  | MediumLevelILCmpSge MediumLevelILCmpSgeRec
-  | MediumLevelILCmpUge MediumLevelILCmpUgeRec
-  | MediumLevelILCmpSgt MediumLevelILCmpSgtRec
-  | MediumLevelILCmpUgt MediumLevelILCmpUgtRec
-  | MediumLevelILAnd MediumLevelILAndRec
-  | MediumLevelILOr MediumLevelILOrRec
-  | MediumLevelILXor MediumLevelILXorRec
-  | MediumLevelILLsl MediumLevelILLslRec
-  | MediumLevelILLsr MediumLevelILLsrRec
-  | MediumLevelILAsr MediumLevelILAsrRec
-  | MediumLevelILRol MediumLevelILRolRec
-  | MediumLevelILRor MediumLevelILRorRec
-  | MediumLevelILMul MediumLevelILMulRec
-  | MediumLevelILAdc MediumLevelILAdcRec
-  | MediumLevelILSbb MediumLevelILSbbRec
-  | MediumLevelILRlc MediumLevelILRlcRec
-  | MediumLevelILRrc MediumLevelILRrcRec
-  | MediumLevelILNoRet MediumLevelILNoRetRec
-  | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
-  | MediumLevelILSetVarAliased MediumLevelILSetVarAliasedRec
-  | MediumLevelILSetVarSsaField MediumLevelILSetVarSsaFieldRec
-  | MediumLevelILSetVarField MediumLevelILSetVarFieldRec
-  | MediumLevelILVarSsaField MediumLevelILVarSsaFieldRec
-  | MediumLevelILGoto MediumLevelILGotoRec
-  | MediumLevelILAdd MediumLevelILAddRec
-  | MediumLevelILSub MediumLevelILSubRec
-  | MediumLevelILMuluDp MediumLevelILMuluDpRec
-  | MediumLevelILMulsDp MediumLevelILMulsDpRec
-  | MediumLevelILDivu MediumLevelILDivuRec
-  | MediumLevelILDivuDp MediumLevelILDivuDpRec
-  | MediumLevelILDivs MediumLevelILDivsRec
-  | MediumLevelILDivsDp MediumLevelILDivsDpRec
-  | MediumLevelILModu MediumLevelILModuRec
-  | MediumLevelILModuDp MediumLevelILModuDpRec
-  | MediumLevelILMods MediumLevelILModsRec
-  | MediumLevelILModsDp MediumLevelILModsDpRec
-  | MediumLevelILNeg MediumLevelILNegRec
-  | MediumLevelILNot MediumLevelILNotRec
-  | MediumLevelILCeil MediumLevelILCeilRec
-  | MediumLevelILSx MediumLevelILSxRec
-  | MediumLevelILZx MediumLevelILZxRec
-  | MediumLevelILLowPart MediumLevelILLowPartRec
-  | MediumLevelILFsqrt MediumLevelILFsqrtRec
-  | MediumLevelILFneg MediumLevelILFnegRec
-  | MediumLevelILFabs MediumLevelILFabsRec
-  | MediumLevelILFloatToInt MediumLevelILFloatToIntRec
-  | MediumLevelILIntToFloat MediumLevelILIntToFloatRec
-  | MediumLevelILFloatConv MediumLevelILFloatConvRec
-  | MediumLevelILRoundToInt MediumLevelILRoundToIntRec
-  | MediumLevelILFloor MediumLevelILFloorRec
-  | MediumLevelILFtrunc MediumLevelILFtruncRec
-  | MediumLevelILIntrinsicSsa MediumLevelILIntrinsicSsaRec
-  | MediumLevelILIntrinsic MediumLevelILIntrinsicRec
-  | MediumLevelILBoolToInt MediumLevelILBoolToIntRec
-  | MediumLevelILVarAliased MediumLevelILVarAliasedRec
-  | MediumLevelILVarAliasedField MediumLevelILVarAliasedFieldRec
-  | MediumLevelILSetVarAliasedField MediumLevelILSetVarAliasedFieldRec
-  | MediumLevelILLoadStructSsa MediumLevelILLoadStructSsaRec
-  | MediumLevelILStoreStructSsa MediumLevelILStoreStructSsaRec
-  | MediumLevelILFcmpE MediumLevelILFcmpERec
-  | MediumLevelILFcmpNe MediumLevelILFcmpNeRec
-  | MediumLevelILFcmpLt MediumLevelILFcmpLtRec
-  | MediumLevelILFcmpLe MediumLevelILFcmpLeRec
-  | MediumLevelILFcmpGe MediumLevelILFcmpGeRec
-  | MediumLevelILFcmpGt MediumLevelILFcmpGtRec
-  | MediumLevelILFcmpO MediumLevelILFcmpORec
-  | MediumLevelILFcmpUo MediumLevelILFcmpUoRec
-  | MediumLevelILFadd MediumLevelILFaddRec
-  | MediumLevelILFsub MediumLevelILFsubRec
-  | MediumLevelILFmul MediumLevelILFmulRec
-  | MediumLevelILFdiv MediumLevelILFdivRec
-  | MediumLevelILConstData MediumLevelILConstDataRec
-  | MediumLevelILAddOverflow MediumLevelILAddOverflowRec
-  | MediumLevelILFloatConst MediumLevelILFloatConstRec
-  | MediumLevelILTestBit MediumLevelILTestBitRec
-  | MediumLevelILSetVarSplit MediumLevelILSetVarSplitRec
-  | MediumLevelILCallParamSsa MediumLevelILCallParamSsaRec
-  | MediumLevelILCallParam MediumLevelILCallParamRec
-  | MediumLevelILSetVar MediumLevelILSetVarRec
-  | MediumLevelILAssert MediumLevelILAssertRec
-  | MediumLevelILForceVer MediumLevelILForceVerRec
-  | MediumLevelILLoad MediumLevelILLoadRec
-  | MediumLevelILLoadStruct MediumLevelILLoadStructRec
-  | MediumLevelILStore MediumLevelILStoreRec
-  | MediumLevelILStoreStruct MediumLevelILStoreStructRec
-  | MediumLevelILVar MediumLevelILVarRec
-  | MediumLevelILVarField MediumLevelILVarFieldRec
-  | MediumLevelILVarSplit MediumLevelILVarSplitRec
-  | MediumLevelILExternPtr MediumLevelILExternPtrRec
-  | MediumLevelILRetHint MediumLevelILRetHintRec
-  | MediumLevelILCall MediumLevelILCallRec
-  | MediumLevelILBp MediumLevelILBpRec
-  | MediumLevelILTrap MediumLevelILTrapRec
-  | MediumLevelILUndef MediumLevelILUndefRec
-  | MediumLevelILUnimpl MediumLevelILUnimplRec
-  | MediumLevelILUnimplMem MediumLevelILUnimplMemRec
-  | MediumLevelILSetVarSplitSsa MediumLevelILSetVarSplitSsaRec
-  | MediumLevelILVarSplitSsa MediumLevelILVarSplitSsaRec
-  | MediumLevelILAssertSsa MediumLevelILAssertSsaRec
-  | MediumLevelILForceVerSsa MediumLevelILForceVerSsaRec
-  | MediumLevelILCallUntypedSsa MediumLevelILCallUntypedSsaRec
-  | MediumLevelILCallUntyped MediumLevelILCallUntypedRec
-  | MediumLevelILSeparateParamList MediumLevelILSeparateParamListRec
-  | MediumLevelILSharedParamSlot MediumLevelILSharedParamSlotRec
-  | MediumLevelILSyscall MediumLevelILSyscallRec
-  | MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
-  | MediumLevelILTailcall MediumLevelILTailcallRec
-  | MediumLevelILTailcallUntyped MediumLevelILTailcallUntypedRec
-  | MediumLevelILFreeVarSlot MediumLevelILFreeVarSlotRec
-  | MediumLevelILSyscallSsa MediumLevelILSyscallSsaRec
-  | MediumLevelILSyscallUntypedSsa MediumLevelILSyscallUntypedSsaRec
-  | MediumLevelILTailcallUntypedSsa MediumLevelILTailcallUntypedSsaRec
-  | MediumLevelILMemoryIntrinsicOutputSsa MediumLevelILMemoryIntrinsicOutputSsaRec
-  | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
-  | MediumLevelILFreeVarSlotSsa MediumLevelILFreeVarSlotSsaRec
-  | MediumLevelILVarPhi MediumLevelILVarPhiRec
-  | MediumLevelILMemPhi MediumLevelILMemPhiRec
-  deriving (Show)
-
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
 getOp inst operand =
   fromIntegral $ case operand of
@@ -1464,7 +328,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVar rec
+      return $ SetVar $ MediumLevelILSetVar rec
     MLIL_SET_VAR_FIELD -> do
       dest' <- varFromID $ fromIntegral $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -1476,7 +340,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarField rec
+      return $ SetVar $ MediumLevelILSetVarField rec
     MLIL_SET_VAR_SPLIT -> do
       high' <- varFromID $ fromIntegral $ getOp rawInst 0
       low' <- varFromID $ fromIntegral $ getOp rawInst 1
@@ -1488,7 +352,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarSplit rec
+      return $ SetVar $ MediumLevelILSetVarSplit rec
     MLIL_ASSERT -> do
       src' <- varFromID $ fromIntegral $ getOp rawInst 0
       constraint' <- getConstraint func rawInst 1
@@ -1516,7 +380,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILLoad rec
+      return $ Load $ MediumLevelILLoad rec
     MLIL_LOAD_STRUCT -> do
       src' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -1526,7 +390,7 @@ create func exprIndex' = do
                 offset = offset',
                 core = coreInst
               }
-      return $ MediumLevelILLoadStruct rec
+      return $ Load $ MediumLevelILLoadStruct rec
     MLIL_STORE -> do
       src' <- getExpr func $ getOp rawInst 0
       dest' <- getExpr func $ getOp rawInst 1
@@ -1536,7 +400,7 @@ create func exprIndex' = do
                 dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILStore rec
+      return $ Store $ MediumLevelILStore rec
     MLIL_STORE_STRUCT -> do
       src' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -1548,7 +412,7 @@ create func exprIndex' = do
                 dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILStoreStruct rec
+      return $ Store $ MediumLevelILStoreStruct rec
     MLIL_VAR -> do
       src' <- varFromID $ fromIntegral $ getOp rawInst 0
       let rec =
@@ -1557,7 +421,7 @@ create func exprIndex' = do
                 var = src',
                 core = coreInst
               }
-      return $ MediumLevelILVar rec
+      return $ VariableInstruction $ MediumLevelILVar rec
     MLIL_VAR_FIELD -> do
       src' <- varFromID $ fromIntegral $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -1603,7 +467,7 @@ create func exprIndex' = do
               { constant = constant',
                 core = coreInst
               }
-      return $ MediumLevelILConst rec
+      return $ Constant $ MediumLevelILConst rec
     MLIL_CONST_DATA -> do
       rawFunc <- Binja.Function.mlilToRawFunction func
       constant' <- getConstantData rawFunc rawInst 0 1
@@ -1612,7 +476,7 @@ create func exprIndex' = do
               { constant = constant',
                 core = coreInst
               }
-      return $ MediumLevelILConstData rec
+      return $ Constant $ MediumLevelILConstData rec
     MLIL_CONST_PTR -> do
       constant' <- getInt rawInst 0
       let rec =
@@ -1620,7 +484,7 @@ create func exprIndex' = do
               { constant = constant',
                 core = coreInst
               }
-      return $ MediumLevelILConstPtr rec
+      return $ Constant $ MediumLevelILConstPtr rec
     MLIL_EXTERN_PTR -> do
       constant' <- getInt rawInst 0
       offset' <- getInt rawInst 1
@@ -1630,7 +494,7 @@ create func exprIndex' = do
                 offset = offset',
                 core = coreInst
               }
-      return $ MediumLevelILExternPtr rec
+      return $ Constant $ MediumLevelILExternPtr rec
     MLIL_FLOAT_CONST -> do
       constant' <- getFloat rawInst 0
       let rec =
@@ -1638,7 +502,7 @@ create func exprIndex' = do
               { constant = constant',
                 core = coreInst
               }
-      return $ MediumLevelILFloatConst rec
+      return $ Constant $ MediumLevelILFloatConst rec
     MLIL_IMPORT -> do
       constant' <- getInt rawInst 0
       let rec =
@@ -1646,7 +510,7 @@ create func exprIndex' = do
               { constant = constant',
                 core = coreInst
               }
-      return $ MediumLevelILImport rec
+      return $ Constant $ MediumLevelILImport rec
     MLIL_ADD -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1656,7 +520,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILAdd rec
+      return $ Arithmetic $ MediumLevelILAdd rec
     MLIL_ADC -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1668,7 +532,7 @@ create func exprIndex' = do
                 carry = carry',
                 core = coreInst
               }
-      return $ MediumLevelILAdc rec
+      return $ Carry $ MediumLevelILAdc rec
     MLIL_SUB -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1678,7 +542,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILSub rec
+      return $ Arithmetic $ MediumLevelILSub rec
     MLIL_SBB -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1690,7 +554,7 @@ create func exprIndex' = do
                 carry = carry',
                 core = coreInst
               }
-      return $ MediumLevelILSbb rec
+      return $ Carry $ MediumLevelILSbb rec
     MLIL_AND -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1700,7 +564,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILAnd rec
+      return $ Arithmetic $ MediumLevelILAnd rec
     MLIL_OR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1710,7 +574,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILOr rec
+      return $ Arithmetic $ MediumLevelILOr rec
     MLIL_XOR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1720,7 +584,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILXor rec
+      return $ Arithmetic $ MediumLevelILXor rec
     MLIL_LSL -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1730,7 +594,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILLsl rec
+      return $ Arithmetic $ MediumLevelILLsl rec
     MLIL_LSR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1740,7 +604,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILLsr rec
+      return $ Arithmetic $ MediumLevelILLsr rec
     MLIL_ASR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1750,7 +614,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILAsr rec
+      return $ Arithmetic $ MediumLevelILAsr rec
     MLIL_ROL -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1760,7 +624,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILRol rec
+      return $ Arithmetic $ MediumLevelILRol rec
     MLIL_RLC -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1772,7 +636,7 @@ create func exprIndex' = do
                 carry = carry',
                 core = coreInst
               }
-      return $ MediumLevelILRlc rec
+      return $ Carry $ MediumLevelILRlc rec
     MLIL_ROR -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1782,7 +646,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILRor rec
+      return $ Arithmetic $ MediumLevelILRor rec
     MLIL_RRC -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1794,7 +658,7 @@ create func exprIndex' = do
                 carry = carry',
                 core = coreInst
               }
-      return $ MediumLevelILRrc rec
+      return $ Carry $ MediumLevelILRrc rec
     MLIL_MUL -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1804,7 +668,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILMul rec
+      return $ Arithmetic $ MediumLevelILMul rec
     MLIL_MULU_DP -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1834,7 +698,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILDivu rec
+      return $ Arithmetic $ MediumLevelILDivu rec
     MLIL_DIVU_DP -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1854,7 +718,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILDivs rec
+      return $ Arithmetic $ MediumLevelILDivs rec
     MLIL_DIVS_DP -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1874,7 +738,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILModu rec
+      return $ Arithmetic $ MediumLevelILModu rec
     MLIL_MODU_DP -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1894,7 +758,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILMods rec
+      return $ Arithmetic $ MediumLevelILMods rec
     MLIL_MODS_DP -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -1912,7 +776,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILNeg rec
+      return $ Arithmetic $ MediumLevelILNeg rec
     MLIL_NOT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1920,7 +784,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILNot rec
+      return $ Arithmetic $ MediumLevelILNot rec
     MLIL_SX -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1928,7 +792,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSx rec
+      return $ Arithmetic $ MediumLevelILSx rec
     MLIL_ZX -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1936,7 +800,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILZx rec
+      return $ Arithmetic $ MediumLevelILZx rec
     MLIL_LOW_PART -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1944,7 +808,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILLowPart rec
+      return $ Arithmetic $ MediumLevelILLowPart rec
     MLIL_JUMP -> do
       dest' <- getExpr func $ getOp rawInst 1
       let rec =
@@ -1952,7 +816,7 @@ create func exprIndex' = do
               { dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILJump rec
+      return $ Terminal $ MediumLevelILJump rec
     MLIL_JUMP_TO -> do
       dest' <- getExpr func $ getOp rawInst 0
       target' <- getTargetMap func exprIndex' 1
@@ -1962,7 +826,7 @@ create func exprIndex' = do
                 target = target',
                 core = coreInst
               }
-      return $ MediumLevelILJumpTo rec
+      return $ Terminal $ MediumLevelILJumpTo rec
     MLIL_RET_HINT -> do
       dest' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -1970,7 +834,7 @@ create func exprIndex' = do
               { dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILRetHint rec
+      return $ ControlFlow $ MediumLevelILRetHint rec
     MLIL_CALL -> do
       output' <- getVarList func exprIndex' 0
       dest' <- getExpr func $ getOp rawInst 2
@@ -1982,7 +846,7 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      return $ MediumLevelILCall rec
+      return $ Localcall $ MediumLevelILCall rec
     MLIL_CALL_UNTYPED -> do
       outputInst <- getExpr func $ getOp rawInst 0
       output' <- case outputInst of
@@ -2008,7 +872,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILCallUntyped rec
+      return $ Localcall $ MediumLevelILCallUntyped rec
     MLIL_CALL_OUTPUT -> do
       dest' <- getVarList func exprIndex' 0
       let rec =
@@ -2048,9 +912,9 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILRet rec
+      return $ Return $ MediumLevelILRet rec
     MLIL_NORET -> do
-      return $ MediumLevelILNoRet $ MediumLevelILNoRetRec {core = coreInst}
+      return $ Terminal $ MediumLevelILNoret $ MediumLevelILNoretRec {core = coreInst}
     MLIL_IF -> do
       condition' <- getExpr func $ getOp rawInst 0
       true' <- getInt rawInst 1
@@ -2062,7 +926,7 @@ create func exprIndex' = do
                 false = false',
                 core = coreInst
               }
-      return $ MediumLevelILIf rec
+      return $ Terminal $ MediumLevelILIf rec
     MLIL_GOTO -> do
       dest' <- getInt rawInst 0
       let rec =
@@ -2070,7 +934,7 @@ create func exprIndex' = do
               { dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILGoto rec
+      return $ Terminal $ MediumLevelILGoto rec
     MLIL_CMP_E -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2080,7 +944,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpE rec
+      return $ Comparison $ MediumLevelILCmpE rec
     MLIL_CMP_NE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2090,7 +954,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpNe rec
+      return $ Comparison $ MediumLevelILCmpNe rec
     MLIL_CMP_SLT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2100,7 +964,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpSlt rec
+      return $ Comparison $ MediumLevelILCmpSlt rec
     MLIL_CMP_ULT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2110,7 +974,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpUlt rec
+      return $ Comparison $ MediumLevelILCmpUlt rec
     MLIL_CMP_SLE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2120,7 +984,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpSle rec
+      return $ Comparison $ MediumLevelILCmpSle rec
     MLIL_CMP_ULE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2130,7 +994,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpUle rec
+      return $ Comparison $ MediumLevelILCmpUle rec
     MLIL_CMP_SGE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2140,7 +1004,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpSge rec
+      return $ Comparison $ MediumLevelILCmpSge rec
     MLIL_CMP_UGE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2150,7 +1014,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpUge rec
+      return $ Comparison $ MediumLevelILCmpUge rec
     MLIL_CMP_SGT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2160,7 +1024,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpSgt rec
+      return $ Comparison $ MediumLevelILCmpSgt rec
     MLIL_CMP_UGT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2170,7 +1034,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILCmpUgt rec
+      return $ Comparison $ MediumLevelILCmpUgt rec
     MLIL_TEST_BIT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2180,7 +1044,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILTestBit rec
+      return $ Comparison $ MediumLevelILTestBit rec
     MLIL_BOOL_TO_INT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2198,7 +1062,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILAddOverflow rec
+      return $ Arithmetic $ MediumLevelILAddOverflow rec
     MLIL_SYSCALL -> do
       output' <- getVarList func exprIndex' 0
       params' <- getExprList func exprIndex' 2
@@ -2208,7 +1072,7 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      return $ MediumLevelILSyscall rec
+      return $ Syscall $ MediumLevelILSyscall rec
     MLIL_SYSCALL_UNTYPED -> do
       outputInst <- getExpr func $ getOp rawInst 0
       output' <- case outputInst of
@@ -2232,7 +1096,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILSyscallUntyped rec
+      return $ Syscall $ MediumLevelILSyscallUntyped rec
     MLIL_TAILCALL -> do
       output' <- getVarList func exprIndex' 0
       dest' <- getExpr func $ getOp rawInst 2
@@ -2244,7 +1108,7 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      return $ MediumLevelILTailcall rec
+      return $ Tailcall $ MediumLevelILTailcall rec
     MLIL_TAILCALL_UNTYPED -> do
       outputInst <- getExpr func $ getOp rawInst 0
       output' <- case outputInst of
@@ -2270,7 +1134,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILTailcallUntyped rec
+      return $ Tailcall $ MediumLevelILTailcallUntyped rec
     MLIL_INTRINSIC -> do
       output' <- getVarList func exprIndex' 0
       intrinsic' <- getIntrinsicIL rawInst func 2
@@ -2282,7 +1146,7 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      return $ MediumLevelILIntrinsic rec
+      return $ IntrinsicInstruction $ MediumLevelILIntrinsic rec
     MLIL_FREE_VAR_SLOT -> do
       dest' <- varFromID $ fromIntegral $ getOp rawInst 0
       let rec =
@@ -2290,9 +1154,9 @@ create func exprIndex' = do
               { dest = dest',
                 core = coreInst
               }
-      return $ MediumLevelILFreeVarSlot rec
+      return $ RegisterStack $ MediumLevelILFreeVarSlot rec
     MLIL_BP -> do
-      return $ MediumLevelILBp $ MediumLevelILBpRec {core = coreInst}
+      return $ Terminal $ MediumLevelILBp $ MediumLevelILBpRec {core = coreInst}
     MLIL_TRAP -> do
       vector' <- getInt rawInst 0
       let rec =
@@ -2300,7 +1164,7 @@ create func exprIndex' = do
               { vector = vector',
                 core = coreInst
               }
-      return $ MediumLevelILTrap rec
+      return $ Terminal $ MediumLevelILTrap rec
     MLIL_UNDEF -> do
       return $ MediumLevelILUndef $ MediumLevelILUndefRec {core = coreInst}
     MLIL_UNIMPL -> do
@@ -2312,7 +1176,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILUnimplMem rec
+      return $ Memory $ MediumLevelILUnimplMem rec
     MLIL_FADD -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2322,7 +1186,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFadd rec
+      return $ Arithmetic $ MediumLevelILFadd rec
     MLIL_FSUB -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2332,7 +1196,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFsub rec
+      return $ Arithmetic $ MediumLevelILFsub rec
     MLIL_FMUL -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2342,7 +1206,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFmul rec
+      return $ Arithmetic $ MediumLevelILFmul rec
     MLIL_FDIV -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2352,7 +1216,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFdiv rec
+      return $ Arithmetic $ MediumLevelILFdiv rec
     MLIL_FSQRT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2360,7 +1224,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFsqrt rec
+      return $ Arithmetic $ MediumLevelILFsqrt rec
     MLIL_FNEG -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2368,7 +1232,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFneg rec
+      return $ Arithmetic $ MediumLevelILFneg rec
     MLIL_FABS -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2376,7 +1240,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFabs rec
+      return $ Arithmetic $ MediumLevelILFabs rec
     MLIL_FLOAT_TO_INT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2384,7 +1248,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFloatToInt rec
+      return $ Arithmetic $ MediumLevelILFloatToInt rec
     MLIL_INT_TO_FLOAT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2392,7 +1256,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILIntToFloat rec
+      return $ Arithmetic $ MediumLevelILIntToFloat rec
     MLIL_FLOAT_CONV -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2400,7 +1264,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFloatConv rec
+      return $ Arithmetic $ MediumLevelILFloatConv rec
     MLIL_ROUND_TO_INT -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2408,7 +1272,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILRoundToInt rec
+      return $ Arithmetic $ MediumLevelILRoundToInt rec
     MLIL_FLOOR -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2416,7 +1280,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFloor rec
+      return $ Arithmetic $ MediumLevelILFloor rec
     MLIL_CEIL -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2424,7 +1288,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILCeil rec
+      return $ Arithmetic $ MediumLevelILCeil rec
     MLIL_FTRUNC -> do
       src' <- getExpr func $ getOp rawInst 0
       let rec =
@@ -2432,7 +1296,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILFtrunc rec
+      return $ Arithmetic $ MediumLevelILFtrunc rec
     MLIL_FCMP_E -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2442,7 +1306,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpE rec
+      return $ Comparison $ MediumLevelILFcmpE rec
     MLIL_FCMP_NE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2452,7 +1316,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpNe rec
+      return $ Comparison $ MediumLevelILFcmpNe rec
     MLIL_FCMP_LT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2462,7 +1326,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpLt rec
+      return $ Comparison $ MediumLevelILFcmpLt rec
     MLIL_FCMP_LE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2472,7 +1336,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpLe rec
+      return $ Comparison $ MediumLevelILFcmpLe rec
     MLIL_FCMP_GE -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2482,7 +1346,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpGe rec
+      return $ Comparison $ MediumLevelILFcmpGe rec
     MLIL_FCMP_GT -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2492,7 +1356,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpGt rec
+      return $ Comparison $ MediumLevelILFcmpGt rec
     MLIL_FCMP_O -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2502,7 +1366,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpO rec
+      return $ Comparison $ MediumLevelILFcmpO rec
     MLIL_FCMP_UO -> do
       left' <- getExpr func $ getOp rawInst 0
       right' <- getExpr func $ getOp rawInst 1
@@ -2512,7 +1376,7 @@ create func exprIndex' = do
                 right = right',
                 core = coreInst
               }
-      return $ MediumLevelILFcmpUo rec
+      return $ Comparison $ MediumLevelILFcmpUo rec
     MLIL_SET_VAR_SSA -> do
       dest' <- getSSAVar rawInst 0 1
       src' <- getExpr func $ getOp rawInst 2
@@ -2522,7 +1386,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarSsa rec
+      return $ SetVar $ MediumLevelILSetVarSsa rec
     MLIL_SET_VAR_SSA_FIELD -> do
       dest' <- getSSAVarAndDest rawInst 0 1
       prev' <- getSSAVarAndDest rawInst 0 2
@@ -2536,7 +1400,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarSsaField rec
+      return $ SetVar $ MediumLevelILSetVarSsaField rec
     MLIL_SET_VAR_SPLIT_SSA -> do
       high' <- getSSAVar rawInst 0 1
       low' <- getSSAVar rawInst 2 3
@@ -2548,7 +1412,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarSplitSsa rec
+      return $ SetVar $ MediumLevelILSetVarSplitSsa rec
     MLIL_SET_VAR_ALIASED -> do
       dest' <- getSSAVarAndDest rawInst 0 1
       prev' <- getSSAVarAndDest rawInst 0 2
@@ -2560,7 +1424,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarAliased rec
+      return $ SetVar $ MediumLevelILSetVarAliased rec
     MLIL_SET_VAR_ALIASED_FIELD -> do
       dest' <- getSSAVarAndDest rawInst 0 1
       prev' <- getSSAVarAndDest rawInst 0 2
@@ -2574,7 +1438,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILSetVarAliasedField rec
+      return $ SetVar $ MediumLevelILSetVarAliasedField rec
     MLIL_VAR_SSA -> do
       src' <- getSSAVar rawInst 0 1
       let rec =
@@ -2583,7 +1447,7 @@ create func exprIndex' = do
                 var = src',
                 core = coreInst
               }
-      return $ MediumLevelILVarSsa rec
+      return $ VariableInstruction $ MediumLevelILVarSsa rec
     MLIL_VAR_SSA_FIELD -> do
       src' <- getSSAVar rawInst 0 1
       offset' <- getInt rawInst 2
@@ -2593,7 +1457,7 @@ create func exprIndex' = do
                 offset = offset',
                 core = coreInst
               }
-      return $ MediumLevelILVarSsaField rec
+      return $ VariableInstruction $ MediumLevelILVarSsaField rec
     MLIL_VAR_ALIASED -> do
       src' <- getSSAVar rawInst 0 1
       let rec =
@@ -2601,7 +1465,7 @@ create func exprIndex' = do
               { src = src',
                 core = coreInst
               }
-      return $ MediumLevelILVarAliased rec
+      return $ VariableInstruction $ MediumLevelILVarAliased rec
     MLIL_VAR_ALIASED_FIELD -> do
       src' <- getSSAVar rawInst 0 1
       offset' <- getInt rawInst 2
@@ -2611,7 +1475,7 @@ create func exprIndex' = do
                 offset = offset',
                 core = coreInst
               }
-      return $ MediumLevelILVarAliasedField rec
+      return $ VariableInstruction $ MediumLevelILVarAliasedField rec
     MLIL_VAR_SPLIT_SSA -> do
       high' <- getSSAVar rawInst 0 1
       low' <- getSSAVar rawInst 2 3
@@ -2621,7 +1485,7 @@ create func exprIndex' = do
                 low = low',
                 core = coreInst
               }
-      return $ MediumLevelILVarSplitSsa rec
+      return $ VariableInstruction $ MediumLevelILVarSplitSsa rec
     MLIL_ASSERT_SSA -> do
       src' <- getSSAVar rawInst 0 1
       constraint' <- getConstraint func rawInst 2
@@ -2661,7 +1525,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILCallSsa rec
+      return $ Localcall $ MediumLevelILCallSsa rec
     MLIL_CALL_UNTYPED_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       output' <- case outputInst of
@@ -2695,7 +1559,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILCallUntypedSsa rec
+      return $ Localcall $ MediumLevelILCallUntypedSsa rec
     MLIL_SYSCALL_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       (output', outputDestMemory') <- case outputInst of
@@ -2714,7 +1578,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILSyscallSsa rec
+      return $ Syscall $ MediumLevelILSyscallSsa rec
     MLIL_SYSCALL_UNTYPED_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       (output', outputDestMemory') <- case outputInst of
@@ -2740,7 +1604,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILSyscallUntypedSsa rec
+      return $ Syscall $ MediumLevelILSyscallUntypedSsa rec
     MLIL_TAILCALL_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       (output', outputDestMemory') <- case outputInst of
@@ -2761,7 +1625,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILTailcallSsa rec
+      return $ Tailcall $ MediumLevelILTailcallSsa rec
     MLIL_TAILCALL_UNTYPED_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       (output', outputDestMemory') <- case outputInst of
@@ -2788,7 +1652,7 @@ create func exprIndex' = do
                 stack = stack',
                 core = coreInst
               }
-      return $ MediumLevelILTailcallUntypedSsa rec
+      return $ Tailcall $ MediumLevelILTailcallUntypedSsa rec
     MLIL_CALL_PARAM_SSA -> do
       srcMemory' <- getInt rawInst 0
       src' <- getExprList func exprIndex' 1
@@ -2828,7 +1692,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILLoadSsa rec
+      return $ Load $ MediumLevelILLoadSsa rec
     MLIL_LOAD_STRUCT_SSA -> do
       src' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -2840,7 +1704,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILLoadStructSsa rec
+      return $ Load $ MediumLevelILLoadStructSsa rec
     MLIL_STORE_SSA -> do
       dest' <- getExpr func $ getOp rawInst 0
       destMemory' <- getInt rawInst 1
@@ -2854,7 +1718,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILStoreSsa rec
+      return $ Store $ MediumLevelILStoreSsa rec
     MLIL_STORE_STRUCT_SSA -> do
       dest' <- getExpr func $ getOp rawInst 0
       offset' <- getInt rawInst 1
@@ -2870,7 +1734,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILStoreStructSsa rec
+      return $ Store $ MediumLevelILStoreStructSsa rec
     MLIL_INTRINSIC_SSA -> do
       output' <- getSSAVarList func exprIndex' 0
       intrinsic' <- getIntrinsicIL rawInst func 2
@@ -2882,7 +1746,7 @@ create func exprIndex' = do
                 params = params',
                 core = coreInst
               }
-      return $ MediumLevelILIntrinsicSsa rec
+      return $ IntrinsicInstruction $ MediumLevelILIntrinsicSsa rec
     MLIL_MEMORY_INTRINSIC_SSA -> do
       outputInst <- getExpr func $ getOp rawInst 0
       (output', outputDestMemory') <- case outputInst of
@@ -2903,7 +1767,7 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILMemoryIntrinsicSsa rec
+      return $ IntrinsicInstruction $ MediumLevelILMemoryIntrinsicSsa rec
     MLIL_FREE_VAR_SLOT_SSA -> do
       dest' <- getSSAVarAndDest rawInst 0 1
       prev' <- getSSAVarAndDest rawInst 0 2
@@ -2913,7 +1777,7 @@ create func exprIndex' = do
                 prev = prev',
                 core = coreInst
               }
-      return $ MediumLevelILFreeVarSlotSsa rec
+      return $ RegisterStack $ MediumLevelILFreeVarSlotSsa rec
     MLIL_VAR_PHI -> do
       dest' <- getSSAVar rawInst 0 1
       src' <- getSSAVarList func exprIndex' 2
@@ -2923,7 +1787,7 @@ create func exprIndex' = do
                 src = src',
                 core = coreInst
               }
-      return $ MediumLevelILVarPhi rec
+      return $ SetVar $ MediumLevelILVarPhi rec
     MLIL_MEM_PHI -> do
       destMemory' <- getInt rawInst 0
       srcMemory' <- getIntList func exprIndex' 1
@@ -2933,4 +1797,4 @@ create func exprIndex' = do
                 srcMemory = srcMemory',
                 core = coreInst
               }
-      return $ MediumLevelILMemPhi rec
+      return $ Memory $ MediumLevelILMemPhi rec

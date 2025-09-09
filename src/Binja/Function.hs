@@ -23,9 +23,9 @@ module Binja.Function
   )
 where
 
+import Binja.Symbol
 import Binja.Types
 import Binja.Utils
-import Binja.Symbol
 import Control.Monad (unless)
 
 foreign import ccall unsafe "BNGetFunctionStart"

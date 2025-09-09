@@ -19,9 +19,9 @@ module Binja.BinaryView
 where
 
 import Binja.Plugin
+import Binja.Symbol
 import Binja.Types
 import Binja.Utils
-import Binja.Symbol
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -67,8 +67,8 @@ load filename options = do
   _ <- initPlugins False
   viewPtr' <- loadFilename filename True options
   if viewPtr' == nullPtr
-  then error $ "Failed to load binary view on file: " ++ filename
-  else return viewPtr'
+    then error $ "Failed to load binary view on file: " ++ filename
+    else return viewPtr'
 
 foreign import ccall "BNHasFunctions"
   c_BNHasFunctions :: BNBinaryViewPtr -> IO CBool
