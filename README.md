@@ -76,8 +76,15 @@ main = do
   let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
   let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
   view <- load filename options
-  funcs <- Binja.BinaryView.functionsByName view "-[PhoneViewController _prepareForLoadView]"
-  mapM_ Binja.Function.print funcs
+  -- Get functions by name
+  funcsByName <- Binja.BinaryView.functionsByName view "-[PhoneViewController _prepareForLoadView]"
+  mapM_ Binja.Function.print funcsByName
+  -- Get function by address
+  singleFunc <- Binja.BinaryView.functionAt view 4294992020
+  Binja.Function.print singleFunc
+  -- Get functions containing address
+  funcsByContain <- Binja.BinaryView.functionsContaining view 4294992020
+  mapM_ Binja.Function.print funcsByName
   shutdown
 ```
 
@@ -99,5 +106,26 @@ main = do
   Prelude.print $ "Found " ++ show (length codeRefs') ++ " codeRefs of address 4295938392"
   mlils <- mapM Binja.Mlil.fromRef codeRefs'
   mapM_ Prelude.print mlils
+  shutdown
+```
+
+### Accessing cross references
+```haskell
+module Main where
+
+import Binja.BinaryView
+import Binja.Function
+import Binja.Mlil
+import Binja.FFI (shutdown)
+
+main = do
+  let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
+  let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
+  view <- load filename options
+  -- Get function by address
+  singleFunc <- Binja.BinaryView.functionAt view 4295449218
+  singleFuncMlilSSA <- Binja.Function.mlilSSA singleFunc
+  refs' <- Binja.Mlil.callerSites view singleFuncMlilSSA
+  Prelude.print $ show $ length refs'
   shutdown
 ```
