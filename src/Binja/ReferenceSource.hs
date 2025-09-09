@@ -3,6 +3,7 @@ module Binja.ReferenceSource
   )
 where
 
+import Binja.FFI
 import Binja.Types
 
 data CodeReferenceList = CodeReferenceList
@@ -12,18 +13,6 @@ data CodeReferenceList = CodeReferenceList
     crViewPtr :: !BNBinaryViewPtr
   }
   deriving (Eq, Show)
-
-foreign import ccall unsafe "BNGetCodeReferences"
-  c_BNGetCodeReferences ::
-    BNBinaryViewPtr ->
-    Word64 ->
-    Ptr CSize ->
-    CBool ->
-    CSize ->
-    IO BNReferenceSourcePtr
-
-foreign import ccall unsafe "BNFreeCodeReferences"
-  c_BNFreeCodeReferences :: BNReferenceSourcePtr -> CSize -> IO ()
 
 -- binary view -> address -> code references
 codeRefs :: BNBinaryViewPtr -> Word64 -> IO [BNReferenceSource]

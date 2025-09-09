@@ -1,5 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 module Binja.Llil
   ( Binja.Llil.startIndex,
     Binja.Llil.sourceFunc,
@@ -9,24 +7,15 @@ module Binja.Llil
 where
 
 import Binja.BinaryView (functionsContaining)
+import Binja.FFI
 import Binja.Function
 import Binja.ReferenceSource
 import Binja.Types
 import Binja.Utils (ptrToMaybe)
 
-foreign import ccall unsafe "BNGetLowLevelILOwnerFunction"
-  c_BNGetLowLevelILOwnderFunction :: BNLlilFunctionPtr -> IO BNFunctionPtr
-
 sourceFunc :: BNLlilFunctionPtr -> IO (Maybe BNFunctionPtr)
 sourceFunc func = do
   ptrToMaybe <$> c_BNGetLowLevelILOwnderFunction func
-
-foreign import ccall unsafe "BNLowLevelILGetInstructionStart"
-  c_BNLowLevelILGetInstructionStart ::
-    BNLlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
-
-foreign import ccall unsafe "BNGetLowLevelILInstructionCount"
-  c_BNGetLowLevelILInstructionCount :: BNLlilFunctionPtr -> IO CSize
 
 startIndex :: BNLlilFunctionPtr -> BNArchPtr -> Word64 -> IO (Maybe CSize)
 startIndex func arch addr = do
@@ -41,17 +30,9 @@ startIndex func arch addr = do
         then return Nothing
         else return $ Just startI
 
-foreign import ccall unsafe "BNGetLowLevelILIndexForInstruction"
-  c_BNGetLowLevelILIndexForInstruction ::
-    BNLlilFunctionPtr -> Word64 -> IO CSize
-
 -- Convert an instruction index into an expression index
 instIndexToExprIndex :: BNLlilFunctionPtr -> Word64 -> IO CSize
 instIndexToExprIndex = c_BNGetLowLevelILIndexForInstruction
-
-foreign import ccall unsafe "BNGetLowLevelILByIndexPtr"
-  c_BNGetLowLevelILByIndexPtr ::
-    Ptr BNLowLevelILInstruction -> BNLlilFunctionPtr -> CSize -> IO (Ptr BNLowLevelILInstruction)
 
 llilByIndex :: BNLlilFunctionPtr -> CSize -> IO BNLowLevelILInstruction
 llilByIndex func index =
