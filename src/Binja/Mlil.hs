@@ -10,7 +10,6 @@ where
 import Binja.BinaryView
 import Binja.Function
 import Binja.Types
-import Binja.Types (MediumLevelILSSAInstruction)
 
 foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
   c_BNMediumLevelILGetInstructionStart ::
@@ -469,7 +468,7 @@ create func exprIndex' = do
               }
       return $ Constant $ MediumLevelILConst rec
     MLIL_CONST_DATA -> do
-      rawFunc <- Binja.Function.mlilToRawFunction func
+      rawFunc <- mlilToRawFunction func
       constant' <- getConstantData rawFunc rawInst 0 1
       let rec =
             MediumLevelILConstDataRec

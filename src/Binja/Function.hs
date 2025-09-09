@@ -23,6 +23,7 @@ module Binja.Function
   )
 where
 
+import Binja.ReferenceSource
 import Binja.Symbol
 import Binja.Types
 import Binja.Utils
@@ -127,16 +128,6 @@ foreign import ccall unsafe "BNGetFunctionMediumLevelIL"
 foreign import ccall unsafe "BNGetMediumLevelILSSAForm"
   c_BNGetMediumLevelILSSAForm :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
 
-foreign import ccall unsafe "BNGetMediumLevelILOwnerFunction"
-  c_BNGetMediumLevelILOwnerFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
-
-mlilToRawFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
-mlilToRawFunction func = do
-  rawFunc <- c_BNGetMediumLevelILOwnerFunction func
-  if rawFunc == nullPtr
-    then error "mlilToRawFunction: BNGetMediumLevelILOwnerFunction returned null"
-    else return rawFunc
-
 mlil :: BNFunctionPtr -> IO BNMlilFunctionPtr
 mlil func = do
   if func == nullPtr
@@ -158,6 +149,16 @@ mlilSSA :: BNFunctionPtr -> IO BNMlilSSAFunctionPtr
 mlilSSA func = do
   mlilFunc <- mlil func
   c_BNGetMediumLevelILSSAForm mlilFunc
+
+foreign import ccall unsafe "BNGetMediumLevelILOwnerFunction"
+  c_BNGetMediumLevelILOwnerFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
+
+mlilToRawFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
+mlilToRawFunction func = do
+  rawFunc <- c_BNGetMediumLevelILOwnerFunction func
+  if rawFunc == nullPtr
+    then error "mlilToRawFunction: BNGetMediumLevelILOwnerFunction returned null"
+    else return rawFunc
 
 print :: BNFunctionPtr -> IO ()
 print func = do
