@@ -26,6 +26,7 @@ The main branch tracks the current work-in-progress.
 All haskell files are formatted with https://github.com/tweag/ormolu
 
 ## Cookbook
+
 ### Getting all functions in a binary
 ```haskell
 module Main where
@@ -44,6 +45,7 @@ main = do
   Prelude.print $ "Found " ++ show (length funcs) ++ " functions"
   shutdown
 ```
+
 ### Getting all medium level SSA IL instructions
 ```haskell
 module Main where
@@ -59,6 +61,23 @@ main = do
   view <- load filename options
   mlilSSAs <- Binja.Mlil.instructions view
   Prelude.print $ "Found " ++ show (length mlilSSAs) ++ " mlil ssa instructions"
+  shutdown
+```
+
+### Getting a specific function
+```haskell
+module Main where
+
+import Binja.BinaryView
+import Binja.Function
+import Binja.FFI (shutdown)
+
+main = do
+  let filename = "/Users/leland/projects/binaryninja-haskell/FaceTime"
+  let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
+  view <- load filename options
+  funcs <- Binja.BinaryView.functionsByName view "-[PhoneViewController _prepareForLoadView]"
+  mapM_ Binja.Function.print funcs
   shutdown
 ```
 
