@@ -80,8 +80,8 @@ main = do
   funcsByName <- Binja.BinaryView.functionsByName view "-[PhoneViewController _prepareForLoadView]"
   mapM_ Binja.Function.print funcsByName
   -- Get function by address
-  singleFunc <- Binja.BinaryView.functionAt view 4294992020
-  Binja.Function.print singleFunc
+  funcsByAddr <- Binja.BinaryView.functionsAt view 4294992020
+  mapM_ Binja.Function.print funcsByAddr
   -- Get functions containing address
   funcsByContain <- Binja.BinaryView.functionsContaining view 4294992020
   mapM_ Binja.Function.print funcsByName
