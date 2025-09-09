@@ -175,6 +175,13 @@ foreign import ccall unsafe "BNGetAnalysisFunctionsContainingAddress"
     Ptr CSize ->
     IO (Ptr BNFunctionPtr)
 
+foreign import ccall unsafe "BNGetAnalysisFunctionsForAddress"
+  c_BNGetAnalysisFunctionsForAddress ::
+    BNBinaryViewPtr ->
+    Word64 ->
+    Ptr CSize ->
+    IO (Ptr BNFunctionPtr)
+
 foreign import ccall unsafe "BNGetStrings"
   c_BNGetStrings ::
     BNBinaryViewPtr ->

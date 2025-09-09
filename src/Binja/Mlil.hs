@@ -2,6 +2,7 @@
 
 module Binja.Mlil
   ( Binja.Mlil.fromRef,
+    Binja.Mlil.callerSites,
     Binja.Mlil.instructions,
     Binja.Mlil.instructionsFromFunc,
   )
@@ -10,6 +11,7 @@ where
 import Binja.BinaryView
 import Binja.FFI
 import Binja.Function
+import Binja.ReferenceSource
 import Binja.Types
 
 -- c_BNMediumLevelILGetInstructionStart is not be well defined
@@ -223,6 +225,18 @@ instructions view = do
   mlilFuncs <- mapM mlil rawFuncs
   allInsts <- mapM instructionsFromFunc mlilFuncs
   return $ concat allInsts
+
+callerSites :: BNBinaryViewPtr -> BNMlilSSAFunctionPtr -> IO [MediumLevelILSSAInstruction]
+callerSites view func = do
+  rawFunc <- mlilToRawFunction func
+  start' <- start rawFunc
+  refs' <- Binja.ReferenceSource.codeRefs view start'
+  insts' <- mapM Binja.Mlil.fromRef refs'
+  return $ filter isLocalcall insts'
+  where
+    isLocalcall :: MediumLevelILSSAInstruction -> Bool
+    isLocalcall (Localcall _) = True
+    isLocalcall _ = False
 
 getOp :: BNMediumLevelILInstruction -> CSize -> CSize
 getOp inst operand =

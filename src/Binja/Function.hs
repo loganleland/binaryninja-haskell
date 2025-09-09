@@ -111,14 +111,6 @@ mlilToRawFunction func = do
     then error "mlilToRawFunction: BNGetMediumLevelILOwnerFunction returned null"
     else return rawFunc
 
-callerSites :: BNBinaryViewPtr -> BNMlilSSAFunctionPtr -> IO [BNReferenceSource]
-callerSites view func = do
-  rawFunc <- mlilToRawFunction func
-  start' <- start rawFunc
-  Binja.ReferenceSource.codeRefs view start'
-
--- Filter to LocalCall only
-
 print :: BNFunctionPtr -> IO ()
 print func = do
   s <- start func

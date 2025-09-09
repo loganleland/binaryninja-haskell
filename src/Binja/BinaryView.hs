@@ -10,7 +10,10 @@ module Binja.BinaryView
     BNBinaryViewPtr,
     functions,
     functionsContaining,
+    functionsAt,
+    functionsByName,
     symbols,
+    symbolsByName,
     strings,
     Binja.BinaryView.read,
   )
@@ -107,6 +110,13 @@ getFunctionList view =
 functions :: BNBinaryViewPtr -> IO [BNFunctionPtr]
 functions = fmap flList . getFunctionList
 
+functionsByName :: BNBinaryViewPtr -> String -> IO [BNFunctionPtr]
+functionsByName view name' = do
+  syms <- symbolsByName view name'
+  let funcSyms = filter Binja.Symbol.isFunction syms
+  xs <- mapM (functionsAt view . address) funcSyms
+  return $ concat xs
+
 symbols :: BNBinaryViewPtr -> IO [Symbol]
 symbols view =
   alloca $ \countPtr -> do
@@ -119,10 +129,27 @@ symbols view =
     arrPtr <- newForeignPtr rawPtr (c_BNFreeSymbolList rawPtr (fromIntegral count))
     mapM Binja.Symbol.create xs
 
+symbolsByName :: BNBinaryViewPtr -> String -> IO [Symbol]
+symbolsByName view name' = do
+  syms <- symbols view
+  return $ filter (\s -> name s == name') syms
+
 functionsContaining :: BNBinaryViewPtr -> Word64 -> IO [BNFunctionPtr]
 functionsContaining view addr =
   alloca $ \countPtr -> do
     arrPtr <- c_BNGetAnalysisFunctionsContainingAddress view addr countPtr
+    count <- peek countPtr
+    if arrPtr == nullPtr || count == 0
+      then return []
+      else do
+        refs <- peekArray (fromIntegral count) (castPtr arrPtr :: Ptr BNFunctionPtr)
+        c_BNFreeFunctionList arrPtr count
+        return refs
+
+functionsAt :: BNBinaryViewPtr -> Word64 -> IO [BNFunctionPtr]
+functionsAt view addr =
+  alloca $ \countPtr -> do
+    arrPtr <- c_BNGetAnalysisFunctionsForAddress view addr countPtr
     count <- peek countPtr
     if arrPtr == nullPtr || count == 0
       then return []
