@@ -22,6 +22,7 @@ module Binja.Function
 where
 
 import Binja.FFI
+import Binja.ReferenceSource
 import Binja.Symbol
 import Binja.Types
 import Binja.Utils
@@ -109,6 +110,14 @@ mlilToRawFunction func = do
   if rawFunc == nullPtr
     then error "mlilToRawFunction: BNGetMediumLevelILOwnerFunction returned null"
     else return rawFunc
+
+callerSites :: BNBinaryViewPtr -> BNMlilSSAFunctionPtr -> IO [BNReferenceSource]
+callerSites view func = do
+  rawFunc <- mlilToRawFunction func
+  start' <- start rawFunc
+  Binja.ReferenceSource.codeRefs view start'
+
+-- Filter to LocalCall only
 
 print :: BNFunctionPtr -> IO ()
 print func = do

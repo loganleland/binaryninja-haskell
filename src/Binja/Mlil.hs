@@ -145,15 +145,6 @@ getFloat inst index' =
     w32 = fromIntegral $ w64 .&. 0xffffffff :: Word32
     value = getOp inst index'
 
-foreign import ccall unsafe "BNGetConstantData"
-  c_BNGetConstantData ::
-    BNFunctionPtr ->
-    CSize ->
-    CSize ->
-    CSize ->
-    Ptr CInt ->
-    IO BNDataBufferPtr
-
 -- TODO: Lift BNDataBufferPtr into a higher type.
 -- Currently this is uniquely used by MediumLevelILConstData
 getConstantData :: BNFunctionPtr -> BNMediumLevelILInstruction -> CSize -> CSize -> IO BNDataBufferPtr
@@ -188,10 +179,6 @@ getIntrinsicIL inst func operand = do
   archTy <- getArch arch'
   intrinsic' <- getIntrinsic archTy index'
   return $ ILIntrinsic index' arch' archTy intrinsic'
-
-foreign import ccall unsafe "BNGetCachedMediumLevelILPossibleValueSetPtr"
-  c_BNGetCachedMediumLevelILPossibleValueSetPtr ::
-    Ptr BNPossibleValueSet -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNPossibleValueSet)
 
 getConstraint :: BNMlilSSAFunctionPtr -> BNMediumLevelILInstruction -> CSize -> IO BNPossibleValueSet
 getConstraint func inst operand = do
