@@ -8,7 +8,7 @@ module Binja.Symbol
 where
 
 import Binja.FFI
-import qualified Binja.ReferenceSource as RS
+import Binja.ReferenceSource
 import Binja.Types
 import Binja.Utils
 
@@ -52,7 +52,7 @@ auto sym = do
 codeRefs :: BNBinaryViewPtr -> BNSymbolPtr -> IO [BNReferenceSource]
 codeRefs view sym = do
   addr <- Binja.Symbol.address sym
-  RS.codeRefs view addr
+  Binja.ReferenceSource.codeRefs view addr
 
 create :: BNSymbolPtr -> IO Symbol
 create sym = do
