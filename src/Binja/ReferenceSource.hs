@@ -1,8 +1,5 @@
 module Binja.ReferenceSource
   ( Binja.ReferenceSource.codeRefs,
-    bnFunc,
-    bnArch,
-    bnAddr,
   )
 where
 

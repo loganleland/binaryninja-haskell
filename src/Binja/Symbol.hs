@@ -1,5 +1,5 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module Binja.Symbol
   ( Binja.Symbol.create,
@@ -85,13 +85,14 @@ create sym = do
   b <- Binja.Symbol.binding sym
   addr <- Binja.Symbol.address sym
   a <- Binja.Symbol.auto sym
-  return Binja.Types.Symbol
-          { name = nameStr,
-            ty = t,
-            binding = b,
-            address = addr,
-            auto = a
-          }
+  return
+    Binja.Types.Symbol
+      { name = nameStr,
+        ty = t,
+        binding = b,
+        address = addr,
+        auto = a
+      }
 
 print :: BNSymbolPtr -> IO ()
 print sym = do

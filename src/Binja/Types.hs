@@ -70,12 +70,171 @@ module Binja.Types
     SymbolList (..),
     SymbolType (..),
     SymbolBinding (..),
-    Symbol(..),
+    Symbol (..),
     BNRegisterValueType (..),
     BNReferenceSource (..),
     Binja.Types.alignmentS,
     getArch,
     getIntrinsic,
+    CoreMediumLevelILInstruction (..),
+    MediumLevelILSSAInstruction (..),
+    Localcall (..),
+    Constant (..),
+    Comparison (..),
+    Arithmetic (..),
+    Terminal (..),
+    Syscall (..),
+    Tailcall (..),
+    ControlFlow (..),
+    Return (..),
+    Load (..),
+    Store (..),
+    Memory (..),
+    Carry (..),
+    VariableInstruction (..),
+    SetVar (..),
+    RegisterStack (..),
+    IntrinsicInstruction (..),
+    MediumLevelILCallSsaRec (..),
+    MediumLevelILCallOutputSsaRec (..),
+    MediumLevelILCallOutputRec (..),
+    MediumLevelILConstPtrRec (..),
+    MediumLevelILNopRec (..),
+    MediumLevelILRetRec (..),
+    MediumLevelILVarSsaRec (..),
+    MediumLevelILSetVarSsaRec (..),
+    MediumLevelILJumpRec (..),
+    MediumLevelILJumpToRec (..),
+    MediumLevelILTailcallSsaRec (..),
+    MediumLevelILImportRec (..),
+    MediumLevelILAddressOfRec (..),
+    MediumLevelILAddressOfFieldRec (..),
+    MediumLevelILLoadSsaRec (..),
+    MediumLevelILConstRec (..),
+    MediumLevelILIfRec (..),
+    MediumLevelILCmpERec (..),
+    MediumLevelILCmpNeRec (..),
+    MediumLevelILCmpSleRec (..),
+    MediumLevelILCmpSltRec (..),
+    MediumLevelILCmpUltRec (..),
+    MediumLevelILCmpUleRec (..),
+    MediumLevelILCmpSgeRec (..),
+    MediumLevelILCmpUgeRec (..),
+    MediumLevelILCmpSgtRec (..),
+    MediumLevelILCmpUgtRec (..),
+    MediumLevelILAndRec (..),
+    MediumLevelILOrRec (..),
+    MediumLevelILXorRec (..),
+    MediumLevelILLslRec (..),
+    MediumLevelILLsrRec (..),
+    MediumLevelILAsrRec (..),
+    MediumLevelILRolRec (..),
+    MediumLevelILRorRec (..),
+    MediumLevelILMulRec (..),
+    MediumLevelILAdcRec (..),
+    MediumLevelILSbbRec (..),
+    MediumLevelILRlcRec (..),
+    MediumLevelILRrcRec (..),
+    MediumLevelILNoretRec (..),
+    MediumLevelILStoreSsaRec (..),
+    MediumLevelILSetVarAliasedRec (..),
+    MediumLevelILSetVarSsaFieldRec (..),
+    MediumLevelILSetVarFieldRec (..),
+    MediumLevelILVarSsaFieldRec (..),
+    MediumLevelILGotoRec (..),
+    MediumLevelILAddRec (..),
+    MediumLevelILSubRec (..),
+    MediumLevelILMuluDpRec (..),
+    MediumLevelILMulsDpRec (..),
+    MediumLevelILDivuRec (..),
+    MediumLevelILDivuDpRec (..),
+    MediumLevelILDivsRec (..),
+    MediumLevelILDivsDpRec (..),
+    MediumLevelILModuRec (..),
+    MediumLevelILModuDpRec (..),
+    MediumLevelILModsRec (..),
+    MediumLevelILModsDpRec (..),
+    MediumLevelILNegRec (..),
+    MediumLevelILNotRec (..),
+    MediumLevelILCeilRec (..),
+    MediumLevelILSxRec (..),
+    MediumLevelILZxRec (..),
+    MediumLevelILLowPartRec (..),
+    MediumLevelILFsqrtRec (..),
+    MediumLevelILFnegRec (..),
+    MediumLevelILFabsRec (..),
+    MediumLevelILFloatToIntRec (..),
+    MediumLevelILIntToFloatRec (..),
+    MediumLevelILFloatConvRec (..),
+    MediumLevelILRoundToIntRec (..),
+    MediumLevelILFloorRec (..),
+    MediumLevelILFtruncRec (..),
+    MediumLevelILIntrinsicSsaRec (..),
+    MediumLevelILIntrinsicRec (..),
+    MediumLevelILBoolToIntRec (..),
+    MediumLevelILVarAliasedRec (..),
+    MediumLevelILVarAliasedFieldRec (..),
+    MediumLevelILSetVarAliasedFieldRec (..),
+    MediumLevelILLoadStructSsaRec (..),
+    MediumLevelILStoreStructSsaRec (..),
+    MediumLevelILFcmpERec (..),
+    MediumLevelILFcmpNeRec (..),
+    MediumLevelILFcmpLtRec (..),
+    MediumLevelILFcmpLeRec (..),
+    MediumLevelILFcmpGeRec (..),
+    MediumLevelILFcmpGtRec (..),
+    MediumLevelILFcmpORec (..),
+    MediumLevelILFcmpUoRec (..),
+    MediumLevelILFaddRec (..),
+    MediumLevelILFsubRec (..),
+    MediumLevelILFmulRec (..),
+    MediumLevelILFdivRec (..),
+    MediumLevelILConstDataRec (..),
+    MediumLevelILAddOverflowRec (..),
+    MediumLevelILFloatConstRec (..),
+    MediumLevelILTestBitRec (..),
+    MediumLevelILSetVarSplitRec (..),
+    MediumLevelILCallParamSsaRec (..),
+    MediumLevelILCallParamRec (..),
+    MediumLevelILSetVarRec (..),
+    MediumLevelILAssertRec (..),
+    MediumLevelILForceVerRec (..),
+    MediumLevelILLoadRec (..),
+    MediumLevelILLoadStructRec (..),
+    MediumLevelILStoreRec (..),
+    MediumLevelILStoreStructRec (..),
+    MediumLevelILVarRec (..),
+    MediumLevelILVarFieldRec (..),
+    MediumLevelILVarSplitRec (..),
+    MediumLevelILExternPtrRec (..),
+    MediumLevelILRetHintRec (..),
+    MediumLevelILCallRec (..),
+    MediumLevelILBpRec (..),
+    MediumLevelILTrapRec (..),
+    MediumLevelILUndefRec (..),
+    MediumLevelILUnimplRec (..),
+    MediumLevelILUnimplMemRec (..),
+    MediumLevelILSetVarSplitSsaRec (..),
+    MediumLevelILVarSplitSsaRec (..),
+    MediumLevelILAssertSsaRec (..),
+    MediumLevelILForceVerSsaRec (..),
+    MediumLevelILCallUntypedSsaRec (..),
+    MediumLevelILCallUntypedRec (..),
+    MediumLevelILSeparateParamListRec (..),
+    MediumLevelILSharedParamSlotRec (..),
+    MediumLevelILSyscallRec (..),
+    MediumLevelILSyscallUntypedRec (..),
+    MediumLevelILTailcallRec (..),
+    MediumLevelILTailcallUntypedRec (..),
+    MediumLevelILFreeVarSlotRec (..),
+    MediumLevelILSyscallSsaRec (..),
+    MediumLevelILSyscallUntypedSsaRec (..),
+    MediumLevelILTailcallUntypedSsaRec (..),
+    MediumLevelILMemoryIntrinsicOutputSsaRec (..),
+    MediumLevelILMemoryIntrinsicSsaRec (..),
+    MediumLevelILFreeVarSlotSsaRec (..),
+    MediumLevelILVarPhiRec (..),
+    MediumLevelILMemPhiRec (..),
   )
 where
 
@@ -205,7 +364,10 @@ getIntrinsic arch' index' = do
 data Architecture = Arm64 | X86
   deriving (Show)
 
-data Intrinsic = IntrinsicArm64 Arm64Intrinsic | IntrinsicArmNeon ArmNeonIntrinsic | IntrinsicX86 X86Intrinsic
+data Intrinsic
+  = IntrinsicArm64 Arm64Intrinsic
+  | IntrinsicArmNeon ArmNeonIntrinsic
+  | IntrinsicX86 X86Intrinsic
   deriving (Show)
 
 data BNPossibleValueSet = BNPossibleValueSet
@@ -24721,3 +24883,1208 @@ instance Enum X86Intrinsic where
   toEnum 9058 = INTRINSIC_XED_IFORM_POPCNT_GPR32_GPRMEM32
   toEnum 9059 = INTRINSIC_XED_IFORM_POPCNT_GPR16_GPRMEM16
   toEnum 9060 = INTRINSIC_LAST
+
+data CoreMediumLevelILInstruction = CoreMediumLevelILInstruction
+  { instr :: BNMediumLevelILInstruction,
+    ilFunc :: BNMlilSSAFunctionPtr,
+    exprIndex :: CSize
+  }
+  deriving (Show)
+
+data MediumLevelILNopRec = MediumLevelILNopRec
+  {core :: CoreMediumLevelILInstruction}
+  deriving (Show)
+
+data MediumLevelILCallSsaRec = MediumLevelILCallSsaRec
+  { output :: [BNSSAVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallOutputSsaRec = MediumLevelILCallOutputSsaRec
+  { destMemory :: Int,
+    dest :: [BNSSAVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallOutputRec = MediumLevelILCallOutputRec
+  { dest :: [BNVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallParamSsaRec = MediumLevelILCallParamSsaRec
+  { srcMemory :: Int,
+    src :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallParamRec = MediumLevelILCallParamRec
+  { src :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILConstPtrRec = MediumLevelILConstPtrRec
+  { constant :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILConstRec = MediumLevelILConstRec
+  { constant :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRetRec = MediumLevelILRetRec
+  { src :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarSsaRec = MediumLevelILVarSsaRec
+  { src :: BNSSAVariable,
+    var :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarSsaRec = MediumLevelILSetVarSsaRec
+  { dest :: BNSSAVariable,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILJumpRec = MediumLevelILJumpRec
+  { dest :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILTailcallSsaRec = MediumLevelILTailcallSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILImportRec = MediumLevelILImportRec
+  { constant :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddressOfRec = MediumLevelILAddressOfRec
+  { src :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddressOfFieldRec = MediumLevelILAddressOfFieldRec
+  { src :: BNVariable,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLoadSsaRec = MediumLevelILLoadSsaRec
+  { src :: MediumLevelILSSAInstruction,
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILIfRec = MediumLevelILIfRec
+  { condition :: MediumLevelILSSAInstruction,
+    true :: Int, -- Instruction Index
+    false :: Int, -- Instruction Index
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpERec = MediumLevelILCmpERec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpSleRec = MediumLevelILCmpSleRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpNeRec = MediumLevelILCmpNeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpSltRec = MediumLevelILCmpSltRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpUltRec = MediumLevelILCmpUltRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpUleRec = MediumLevelILCmpUleRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpSgeRec = MediumLevelILCmpSgeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpUgeRec = MediumLevelILCmpUgeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpSgtRec = MediumLevelILCmpSgtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCmpUgtRec = MediumLevelILCmpUgtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAndRec = MediumLevelILAndRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILOrRec = MediumLevelILOrRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILXorRec = MediumLevelILXorRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLslRec = MediumLevelILLslRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLsrRec = MediumLevelILLsrRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAsrRec = MediumLevelILAsrRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRolRec = MediumLevelILRolRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRorRec = MediumLevelILRorRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMulRec = MediumLevelILMulRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMuluRec = MediumLevelILMuluRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMuluDpRec = MediumLevelILMuluDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMulsDpRec = MediumLevelILMulsDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILDivsRec = MediumLevelILDivsRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILDivuRec = MediumLevelILDivuRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILDivuDpRec = MediumLevelILDivuDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILDivsDpRec = MediumLevelILDivsDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILModuRec = MediumLevelILModuRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILModuDpRec = MediumLevelILModuDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILModsRec = MediumLevelILModsRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILModsDpRec = MediumLevelILModsDpRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddOverflowRec = MediumLevelILAddOverflowRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILNoretRec = MediumLevelILNoretRec
+  { core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILStoreSsaRec = MediumLevelILStoreSsaRec
+  { dest :: MediumLevelILSSAInstruction,
+    destMemory :: Int,
+    srcMemory :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarSsaFieldRec = MediumLevelILSetVarSsaFieldRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    offset :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarAliasedRec = MediumLevelILSetVarAliasedRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarSsaFieldRec = MediumLevelILVarSsaFieldRec
+  { src :: BNSSAVariable,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILGotoRec = MediumLevelILGotoRec
+  { dest :: Int, -- InstructionIndex
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAddRec = MediumLevelILAddRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSubRec = MediumLevelILSubRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILNegRec = MediumLevelILNegRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILNotRec = MediumLevelILNotRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSxRec = MediumLevelILSxRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILZxRec = MediumLevelILZxRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLowPartRec = MediumLevelILLowPartRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFsqrtRec = MediumLevelILFsqrtRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFnegRec = MediumLevelILFnegRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFabsRec = MediumLevelILFabsRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFloatToIntRec = MediumLevelILFloatToIntRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILIntToFloatRec = MediumLevelILIntToFloatRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFloatConvRec = MediumLevelILFloatConvRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRoundToIntRec = MediumLevelILRoundToIntRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFloorRec = MediumLevelILFloorRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCeilRec = MediumLevelILCeilRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFtruncRec = MediumLevelILFtruncRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILJumpToRec = MediumLevelILJumpToRec
+  { dest :: MediumLevelILSSAInstruction,
+    target :: TargetMap,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILIntrinsicSsaRec = MediumLevelILIntrinsicSsaRec
+  { output :: [BNSSAVariable],
+    intrinsic :: ILIntrinsic,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILIntrinsicRec = MediumLevelILIntrinsicRec
+  { output :: [BNVariable],
+    intrinsic :: ILIntrinsic,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILBoolToIntRec = MediumLevelILBoolToIntRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarAliasedRec = MediumLevelILVarAliasedRec
+  { src :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarAliasedFieldRec = MediumLevelILVarAliasedFieldRec
+  { src :: BNSSAVariable,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarAliasedFieldRec = MediumLevelILSetVarAliasedFieldRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    offset :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLoadStructSsaRec = MediumLevelILLoadStructSsaRec
+  { src :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILStoreStructSsaRec = MediumLevelILStoreStructSsaRec
+  { dest :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    destMemory :: Int,
+    srcMemory :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpERec = MediumLevelILFcmpERec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpNeRec = MediumLevelILFcmpNeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpLtRec = MediumLevelILFcmpLtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpLeRec = MediumLevelILFcmpLeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpGeRec = MediumLevelILFcmpGeRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpGtRec = MediumLevelILFcmpGtRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpORec = MediumLevelILFcmpORec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFcmpUoRec = MediumLevelILFcmpUoRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFmulRec = MediumLevelILFmulRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFdivRec = MediumLevelILFdivRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFsubRec = MediumLevelILFsubRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFaddRec = MediumLevelILFaddRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILTestBitRec = MediumLevelILTestBitRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILConstDataRec = MediumLevelILConstDataRec
+  { constant :: BNDataBufferPtr,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFloatConstRec = MediumLevelILFloatConstRec
+  { constant :: Double,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAdcRec = MediumLevelILAdcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSbbRec = MediumLevelILSbbRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRlcRec = MediumLevelILRlcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRrcRec = MediumLevelILRrcRec
+  { left :: MediumLevelILSSAInstruction,
+    right :: MediumLevelILSSAInstruction,
+    carry :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarRec = MediumLevelILSetVarRec
+  { dest :: BNVariable,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarFieldRec = MediumLevelILSetVarFieldRec
+  { dest :: BNVariable,
+    offset :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarSplitRec = MediumLevelILSetVarSplitRec
+  { high :: BNVariable,
+    low :: BNVariable,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAssertRec = MediumLevelILAssertRec
+  { src :: BNVariable,
+    constraint :: BNPossibleValueSet,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILAssertSsaRec = MediumLevelILAssertSsaRec
+  { src :: BNSSAVariable,
+    constraint :: BNPossibleValueSet,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILForceVerRec = MediumLevelILForceVerRec
+  { dest :: BNVariable,
+    src :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILForceVerSsaRec = MediumLevelILForceVerSsaRec
+  { dest :: BNSSAVariable,
+    src :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLoadRec = MediumLevelILLoadRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILLoadStructRec = MediumLevelILLoadStructRec
+  { src :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILStoreRec = MediumLevelILStoreRec
+  { src :: MediumLevelILSSAInstruction,
+    dest :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILStoreStructRec = MediumLevelILStoreStructRec
+  { dest :: MediumLevelILSSAInstruction,
+    offset :: Int,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarRec = MediumLevelILVarRec
+  { src :: BNVariable,
+    var :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarFieldRec = MediumLevelILVarFieldRec
+  { src :: BNVariable,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarSplitRec = MediumLevelILVarSplitRec
+  { high :: BNVariable,
+    low :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILExternPtrRec = MediumLevelILExternPtrRec
+  { constant :: Int,
+    offset :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILRetHintRec = MediumLevelILRetHintRec
+  { dest :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallRec = MediumLevelILCallRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILBpRec = MediumLevelILBpRec
+  {core :: CoreMediumLevelILInstruction}
+  deriving (Show)
+
+data MediumLevelILTrapRec = MediumLevelILTrapRec
+  { vector :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILUndefRec = MediumLevelILUndefRec
+  {core :: CoreMediumLevelILInstruction}
+  deriving (Show)
+
+data MediumLevelILUnimplRec = MediumLevelILUnimplRec
+  {core :: CoreMediumLevelILInstruction}
+  deriving (Show)
+
+data MediumLevelILUnimplMemRec = MediumLevelILUnimplMemRec
+  { src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSetVarSplitSsaRec = MediumLevelILSetVarSplitSsaRec
+  { high :: BNSSAVariable,
+    low :: BNSSAVariable,
+    src :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarSplitSsaRec = MediumLevelILVarSplitSsaRec
+  { high :: BNSSAVariable,
+    low :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallUntypedSsaRec = MediumLevelILCallUntypedSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    paramsSrcMemory :: Int,
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILCallUntypedRec = MediumLevelILCallUntypedRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSeparateParamListRec = MediumLevelILSeparateParamListRec
+  { params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSharedParamSlotRec = MediumLevelILSharedParamSlotRec
+  { params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSyscallRec = MediumLevelILSyscallRec
+  { output :: [BNVariable],
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSyscallUntypedRec = MediumLevelILSyscallUntypedRec
+  { output :: [BNVariable],
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILTailcallRec = MediumLevelILTailcallRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILTailcallUntypedRec = MediumLevelILTailcallUntypedRec
+  { output :: [BNVariable],
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFreeVarSlotRec = MediumLevelILFreeVarSlotRec
+  { dest :: BNVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSyscallSsaRec = MediumLevelILSyscallSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILSyscallUntypedSsaRec = MediumLevelILSyscallUntypedSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    params :: [MediumLevelILSSAInstruction],
+    paramsSrcMemory :: Int,
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILTailcallUntypedSsaRec = MediumLevelILTailcallUntypedSsaRec
+  { output :: [BNSSAVariable],
+    outputDestMemory :: Int,
+    dest :: MediumLevelILSSAInstruction,
+    params :: [MediumLevelILSSAInstruction],
+    stack :: MediumLevelILSSAInstruction,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMemoryIntrinsicOutputSsaRec = MediumLevelILMemoryIntrinsicOutputSsaRec
+  { destMemory :: Int,
+    output :: [BNSSAVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMemoryIntrinsicSsaRec = MediumLevelILMemoryIntrinsicSsaRec
+  { output :: [BNSSAVariable],
+    destMemory :: Int,
+    intrinsic :: ILIntrinsic,
+    params :: [MediumLevelILSSAInstruction],
+    srcMemory :: Int,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILFreeVarSlotSsaRec = MediumLevelILFreeVarSlotSsaRec
+  { dest :: BNSSAVariable,
+    prev :: BNSSAVariable,
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILVarPhiRec = MediumLevelILVarPhiRec
+  { dest :: BNSSAVariable,
+    src :: [BNSSAVariable],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data MediumLevelILMemPhiRec = MediumLevelILMemPhiRec
+  { destMemory :: Int,
+    srcMemory :: [Int],
+    core :: CoreMediumLevelILInstruction
+  }
+  deriving (Show)
+
+data Localcall
+  = MediumLevelILCall MediumLevelILCallRec
+  | MediumLevelILCallSsa MediumLevelILCallSsaRec
+  | MediumLevelILCallUntypedSsa MediumLevelILCallUntypedSsaRec
+  | MediumLevelILCallUntyped MediumLevelILCallUntypedRec
+  deriving (Show)
+
+data Constant
+  = MediumLevelILConst MediumLevelILConstRec
+  | MediumLevelILConstPtr MediumLevelILConstPtrRec
+  | MediumLevelILFloatConst MediumLevelILFloatConstRec
+  | MediumLevelILImport MediumLevelILImportRec
+  | MediumLevelILConstData MediumLevelILConstDataRec
+  | MediumLevelILExternPtr MediumLevelILExternPtrRec
+  deriving (Show)
+
+data Comparison
+  = MediumLevelILCmpE MediumLevelILCmpERec
+  | MediumLevelILFcmpE MediumLevelILFcmpERec
+  | MediumLevelILCmpNe MediumLevelILCmpNeRec
+  | MediumLevelILFcmpNe MediumLevelILFcmpNeRec
+  | MediumLevelILFcmpLt MediumLevelILFcmpLtRec
+  | MediumLevelILFcmpLe MediumLevelILFcmpLeRec
+  | MediumLevelILFcmpGe MediumLevelILFcmpGeRec
+  | MediumLevelILFcmpGt MediumLevelILFcmpGtRec
+  | MediumLevelILCmpSlt MediumLevelILCmpSltRec
+  | MediumLevelILCmpUlt MediumLevelILCmpUltRec
+  | MediumLevelILCmpSle MediumLevelILCmpSleRec
+  | MediumLevelILCmpUle MediumLevelILCmpUleRec
+  | MediumLevelILCmpSge MediumLevelILCmpSgeRec
+  | MediumLevelILCmpUge MediumLevelILCmpUgeRec
+  | MediumLevelILCmpSgt MediumLevelILCmpSgtRec
+  | MediumLevelILCmpUgt MediumLevelILCmpUgtRec
+  | MediumLevelILFcmpO MediumLevelILFcmpORec
+  | MediumLevelILFcmpUo MediumLevelILFcmpUoRec
+  | MediumLevelILTestBit MediumLevelILTestBitRec
+  deriving (Show)
+
+data Arithmetic
+  = MediumLevelILNeg MediumLevelILNegRec
+  | MediumLevelILNot MediumLevelILNotRec
+  | MediumLevelILSx MediumLevelILSxRec
+  | MediumLevelILZx MediumLevelILZxRec
+  | MediumLevelILLowPart MediumLevelILLowPartRec
+  | MediumLevelILFsqrt MediumLevelILFsqrtRec
+  | MediumLevelILFneg MediumLevelILFnegRec
+  | MediumLevelILFabs MediumLevelILFabsRec
+  | MediumLevelILFloatToInt MediumLevelILFloatToIntRec
+  | MediumLevelILIntToFloat MediumLevelILIntToFloatRec
+  | MediumLevelILFloatConv MediumLevelILFloatConvRec
+  | MediumLevelILRoundToInt MediumLevelILRoundToIntRec
+  | MediumLevelILFloor MediumLevelILFloorRec
+  | MediumLevelILCeil MediumLevelILCeilRec
+  | MediumLevelILFtrunc MediumLevelILFtruncRec
+  | MediumLevelILAdd MediumLevelILAddRec
+  | MediumLevelILSub MediumLevelILSubRec
+  | MediumLevelILAnd MediumLevelILAndRec
+  | MediumLevelILOr MediumLevelILOrRec
+  | MediumLevelILXor MediumLevelILXorRec
+  | MediumLevelILLsl MediumLevelILLslRec
+  | MediumLevelILLsr MediumLevelILLsrRec
+  | MediumLevelILAsr MediumLevelILAsrRec
+  | MediumLevelILRol MediumLevelILRolRec
+  | MediumLevelILRor MediumLevelILRorRec
+  | MediumLevelILMul MediumLevelILMulRec
+  | MediumLevelILDivu MediumLevelILDivuRec
+  | MediumLevelILDivs MediumLevelILDivsRec
+  | MediumLevelILModu MediumLevelILModuRec
+  | MediumLevelILMods MediumLevelILModsRec
+  | MediumLevelILAddOverflow MediumLevelILAddOverflowRec
+  | MediumLevelILFadd MediumLevelILFaddRec
+  | MediumLevelILFsub MediumLevelILFsubRec
+  | MediumLevelILFmul MediumLevelILFmulRec
+  | MediumLevelILFdiv MediumLevelILFdivRec
+  deriving (Show)
+
+data Terminal
+  = MediumLevelILNoret MediumLevelILNoretRec
+  | MediumLevelILBp MediumLevelILBpRec
+  | MediumLevelILJump MediumLevelILJumpRec
+  | MediumLevelILGoto MediumLevelILGotoRec
+  | MediumLevelILTrap MediumLevelILTrapRec
+  | MediumLevelILJumpTo MediumLevelILJumpToRec
+  | MediumLevelILIf MediumLevelILIfRec
+  deriving (Show)
+
+data Syscall
+  = MediumLevelILSyscallUntyped MediumLevelILSyscallUntypedRec
+  | MediumLevelILSyscallSsa MediumLevelILSyscallSsaRec
+  | MediumLevelILSyscall MediumLevelILSyscallRec
+  | MediumLevelILSyscallUntypedSsa MediumLevelILSyscallUntypedSsaRec
+  deriving (Show)
+
+data Tailcall
+  = MediumLevelILTailcallUntyped MediumLevelILTailcallUntypedRec
+  | MediumLevelILTailcall MediumLevelILTailcallRec
+  | MediumLevelILTailcallSsa MediumLevelILTailcallSsaRec
+  | MediumLevelILTailcallUntypedSsa MediumLevelILTailcallUntypedSsaRec
+  deriving (Show)
+
+data ControlFlow
+  = MediumLevelILRetHint MediumLevelILRetHintRec
+  deriving (Show)
+
+data Return
+  = MediumLevelILRet MediumLevelILRetRec
+  deriving (Show)
+
+data Load
+  = MediumLevelILLoad MediumLevelILLoadRec
+  | MediumLevelILLoadStruct MediumLevelILLoadStructRec
+  | MediumLevelILLoadSsa MediumLevelILLoadSsaRec
+  | MediumLevelILLoadStructSsa MediumLevelILLoadStructSsaRec
+  deriving (Show)
+
+data Store
+  = MediumLevelILStore MediumLevelILStoreRec
+  | MediumLevelILStoreStruct MediumLevelILStoreStructRec
+  | MediumLevelILStoreSsa MediumLevelILStoreSsaRec
+  | MediumLevelILStoreStructSsa MediumLevelILStoreStructSsaRec
+  deriving (Show)
+
+data Memory
+  = MediumLevelILUnimplMem MediumLevelILUnimplMemRec
+  | MediumLevelILMemPhi MediumLevelILMemPhiRec
+  deriving (Show)
+
+data Carry
+  = MediumLevelILAdc MediumLevelILAdcRec
+  | MediumLevelILSbb MediumLevelILSbbRec
+  | MediumLevelILRlc MediumLevelILRlcRec
+  | MediumLevelILRrc MediumLevelILRrcRec
+  deriving (Show)
+
+data SetVar
+  = MediumLevelILSetVar MediumLevelILSetVarRec
+  | MediumLevelILVarPhi MediumLevelILVarPhiRec
+  | MediumLevelILSetVarSsa MediumLevelILSetVarSsaRec
+  | MediumLevelILSetVarAliased MediumLevelILSetVarAliasedRec
+  | MediumLevelILSetVarSsaField MediumLevelILSetVarSsaFieldRec
+  | MediumLevelILSetVarSplitSsa MediumLevelILSetVarSplitSsaRec
+  | MediumLevelILSetVarAliasedField MediumLevelILSetVarAliasedFieldRec
+  | MediumLevelILSetVarField MediumLevelILSetVarFieldRec
+  | MediumLevelILSetVarSplit MediumLevelILSetVarSplitRec
+  deriving (Show)
+
+data RegisterStack
+  = MediumLevelILFreeVarSlot MediumLevelILFreeVarSlotRec
+  | MediumLevelILFreeVarSlotSsa MediumLevelILFreeVarSlotSsaRec
+  deriving (Show)
+
+data VariableInstruction
+  = MediumLevelILVar MediumLevelILVarRec
+  | MediumLevelILVarSsa MediumLevelILVarSsaRec
+  | MediumLevelILVarAliased MediumLevelILVarAliasedRec
+  | MediumLevelILVarSsaField MediumLevelILVarSsaFieldRec
+  | MediumLevelILVarAliasedField MediumLevelILVarAliasedFieldRec
+  | MediumLevelILVarSplitSsa MediumLevelILVarSplitSsaRec
+  deriving (Show)
+
+data IntrinsicInstruction
+  = MediumLevelILIntrinsic MediumLevelILIntrinsicRec
+  | MediumLevelILIntrinsicSsa MediumLevelILIntrinsicSsaRec
+  | MediumLevelILMemoryIntrinsicSsa MediumLevelILMemoryIntrinsicSsaRec
+  deriving (Show)
+
+data MediumLevelILSSAInstruction
+  = Localcall Localcall
+  | Constant Constant
+  | Comparison Comparison
+  | Arithmetic Arithmetic
+  | Terminal Terminal
+  | Syscall Syscall
+  | Tailcall Tailcall
+  | ControlFlow ControlFlow
+  | Return Return
+  | Load Load
+  | Store Store
+  | Memory Memory
+  | Carry Carry
+  | VariableInstruction VariableInstruction
+  | SetVar SetVar
+  | RegisterStack RegisterStack
+  | IntrinsicInstruction IntrinsicInstruction
+  | MediumLevelILCallOutputSsa MediumLevelILCallOutputSsaRec
+  | MediumLevelILCallOutput MediumLevelILCallOutputRec
+  | MediumLevelILMemoryIntrinsicOutputSsa MediumLevelILMemoryIntrinsicOutputSsaRec
+  | MediumLevelILCallParamSsa MediumLevelILCallParamSsaRec
+  | MediumLevelILCallParam MediumLevelILCallParamRec
+  | MediumLevelILNop MediumLevelILNopRec
+  | MediumLevelILAddressOf MediumLevelILAddressOfRec
+  | MediumLevelILAddressOfField MediumLevelILAddressOfFieldRec
+  | MediumLevelILMuluDp MediumLevelILMuluDpRec
+  | MediumLevelILMulsDp MediumLevelILMulsDpRec
+  | MediumLevelILDivuDp MediumLevelILDivuDpRec
+  | MediumLevelILDivsDp MediumLevelILDivsDpRec
+  | MediumLevelILModuDp MediumLevelILModuDpRec
+  | MediumLevelILModsDp MediumLevelILModsDpRec
+  | MediumLevelILBoolToInt MediumLevelILBoolToIntRec
+  | MediumLevelILAssert MediumLevelILAssertRec
+  | MediumLevelILAssertSsa MediumLevelILAssertSsaRec
+  | MediumLevelILForceVer MediumLevelILForceVerRec
+  | MediumLevelILForceVerSsa MediumLevelILForceVerSsaRec
+  | MediumLevelILVarField MediumLevelILVarFieldRec
+  | MediumLevelILVarSplit MediumLevelILVarSplitRec
+  | MediumLevelILUndef MediumLevelILUndefRec
+  | MediumLevelILUnimpl MediumLevelILUnimplRec
+  | MediumLevelILSeparateParamList MediumLevelILSeparateParamListRec
+  | MediumLevelILSharedParamSlot MediumLevelILSharedParamSlotRec
+  deriving (Show)
