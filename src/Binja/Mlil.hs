@@ -8,32 +8,9 @@ module Binja.Mlil
 where
 
 import Binja.BinaryView
+import Binja.FFI
 import Binja.Function
 import Binja.Types
-
-foreign import ccall unsafe "BNMediumLevelILGetInstructionStart"
-  c_BNMediumLevelILGetInstructionStart ::
-    BNMlilFunctionPtr -> BNArchPtr -> Word64 -> IO CSize
-
-foreign import ccall unsafe "BNGetMediumLevelILInstructionCount"
-  c_BNGetMediumLevelILInstructionCount ::
-    BNMlilFunctionPtr -> IO CSize
-
-foreign import ccall unsafe "BNGetMediumLevelILIndexForInstruction"
-  c_BNGetMediumLevelILIndexForInstruction ::
-    BNMlilFunctionPtr -> Word64 -> IO CSize
-
-foreign import ccall unsafe "BNGetMediumLevelILByIndexPtr"
-  c_BNGetMediumLevelILByIndexPtr ::
-    Ptr BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
-
-foreign import ccall unsafe "BNGetMediumLevelSSAILByIndexPtr"
-  c_BNGetMediumLevelSSAILByIndexPtr ::
-    Ptr BNMediumLevelILInstruction -> BNMlilSSAFunctionPtr -> CSize -> IO (Ptr BNMediumLevelILInstruction)
-
-foreign import ccall unsafe "BNGetMediumLevelILSSAExprIndex"
-  c_BNGetMediumLevelILSSAExprIndex ::
-    BNMlilFunctionPtr -> CSize -> IO CSize
 
 -- c_BNMediumLevelILGetInstructionStart is not be well defined
 -- on mlil ssa function pointer.
@@ -83,14 +60,6 @@ fromRef ref = do
   ssaExprIndex <- c_BNGetMediumLevelILSSAExprIndex func exprIndex'
   create funcSSA ssaExprIndex
 
-foreign import ccall unsafe "BNMediumLevelILFreeOperandList"
-  c_BNMediumLevelILFreeOperandList ::
-    Ptr CULLong -> IO ()
-
-foreign import ccall unsafe "BNMediumLevelILGetOperandList"
-  c_BNMediumLevelILGetOperandList ::
-    BNMlilSSAFunctionPtr -> CSize -> CSize -> Ptr CSize -> IO (Ptr CULLong)
-
 getExprList :: BNMlilSSAFunctionPtr -> CSize -> CSize -> IO [MediumLevelILSSAInstruction]
 getExprList func expr operand =
   alloca $ \countPtr -> do
@@ -120,14 +89,6 @@ getIntList func expr operand =
         else peekArray count rawPtr
     when (rawPtr /= nullPtr) $ c_BNMediumLevelILFreeOperandList rawPtr
     return $ map fromIntegral xs
-
-foreign import ccall unsafe "BNFromVariableIdentifierPtr"
-  c_BNFromVariableIdentifierPtr ::
-    Ptr BNVariable -> CULLong -> IO ()
-
-foreign import ccall unsafe "freeBNVariable"
-  c_freeBNVariable ::
-    Ptr BNVariable -> IO ()
 
 varFromID :: CULLong -> IO BNVariable
 varFromID index =
@@ -239,26 +200,6 @@ getConstraint func inst operand = do
     peek p
   where
     constraintIndex = getOp inst operand
-
-foreign import ccall unsafe "BNGetMediumLevelILBasicBlockList"
-  c_BNGetMediumLevelILBasicBlockList ::
-    BNMlilFunctionPtr -> Ptr CSize -> IO (Ptr BNBasicBlockPtr)
-
-foreign import ccall unsafe "BNFreeBasicBlockList"
-  c_BNFreeBasicBlockList ::
-    Ptr BNBasicBlockPtr -> CSize -> IO ()
-
-foreign import ccall unsafe "BNGetBasicBlockStart"
-  c_BNGetBasicBlockStart ::
-    BNBasicBlockPtr -> IO CULLong
-
-foreign import ccall unsafe "BNGetBasicBlockEnd"
-  c_BNGetBasicBlockEnd ::
-    BNBasicBlockPtr -> IO CULLong
-
-foreign import ccall unsafe "BNGetBasicBlockFunction"
-  c_BNGetBasicBlockFunction ::
-    BNBasicBlockPtr -> IO BNFunctionPtr
 
 basicBlocks :: BNMlilFunctionPtr -> IO [BNBasicBlockPtr]
 basicBlocks func =

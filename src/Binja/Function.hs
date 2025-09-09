@@ -1,5 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 module Binja.Function
   ( Function,
     Binja.Function.start,
@@ -23,32 +21,20 @@ module Binja.Function
   )
 where
 
-import Binja.ReferenceSource
+import Binja.FFI
 import Binja.Symbol
 import Binja.Types
 import Binja.Utils
 import Control.Monad (unless)
 
-foreign import ccall unsafe "BNGetFunctionStart"
-  c_BNGetFunctionStart :: BNFunctionPtr -> IO Word64
-
 start :: BNFunctionPtr -> IO Word64
 start = c_BNGetFunctionStart
-
-foreign import ccall unsafe "BNGetFunctionHighestAddress"
-  c_BNGetFunctionHighestAddress :: BNFunctionPtr -> IO Word64
 
 highestAddress :: BNFunctionPtr -> IO Word64
 highestAddress = c_BNGetFunctionHighestAddress
 
-foreign import ccall unsafe "BNGetFunctionLowestAddress"
-  c_BNGetFunctionLowestAddress :: BNFunctionPtr -> IO Word64
-
 lowestAddress :: BNFunctionPtr -> IO Word64
 lowestAddress = c_BNGetFunctionLowestAddress
-
-foreign import ccall unsafe "BNGetFunctionSymbol"
-  c_BNGetFunctionSymbol :: BNFunctionPtr -> IO BNSymbolPtr
 
 symbol :: BNFunctionPtr -> IO Symbol
 symbol func = do
@@ -57,49 +43,25 @@ symbol func = do
     then error "c_BNGetFunctionSymbol returned null"
     else Binja.Symbol.create p
 
-foreign import ccall unsafe "BNWasFunctionAutomaticallyDiscovered"
-  c_BNWasFunctionAutomaticallyDiscovered :: BNFunctionPtr -> IO CBool
-
 auto :: BNFunctionPtr -> IO Bool
 auto = fmap Binja.Utils.toBool . c_BNWasFunctionAutomaticallyDiscovered
-
-foreign import ccall unsafe "BNFunctionHasUserAnnotations"
-  c_BNFunctionHasUserAnnotations :: BNFunctionPtr -> IO CBool
 
 hasUserAnnotations :: BNFunctionPtr -> IO Bool
 hasUserAnnotations = fmap Binja.Utils.toBool . c_BNFunctionHasUserAnnotations
 
-foreign import ccall unsafe "BNFunctionHasExplicitlyDefinedType"
-  c_BNFunctionHasExplicitlyDefinedType :: BNFunctionPtr -> IO CBool
-
 hasExplicitlyDefinedType :: BNFunctionPtr -> IO Bool
 hasExplicitlyDefinedType = fmap Binja.Utils.toBool . c_BNFunctionHasExplicitlyDefinedType
-
-foreign import ccall unsafe "BNIsFunctionUpdateNeeded"
-  c_BNIsFunctionUpdateNeeded :: BNFunctionPtr -> IO CBool
 
 needsUpdate :: BNFunctionPtr -> IO Bool
 needsUpdate = fmap Binja.Utils.toBool . c_BNIsFunctionUpdateNeeded
 
-foreign import ccall unsafe "BNHasUnresolvedIndirectBranches"
-  c_BNHasUnresolvedIndirectBranches :: BNFunctionPtr -> IO CBool
-
 hasUnresolvedIndirectBranches :: BNFunctionPtr -> IO Bool
 hasUnresolvedIndirectBranches = fmap Binja.Utils.toBool . c_BNHasUnresolvedIndirectBranches
-
-foreign import ccall "BNGetFunctionComment"
-  c_BNGetFunctionComment :: BNFunctionPtr -> IO CString
 
 getComment :: BNFunctionPtr -> IO String
 getComment func = do
   cStr <- c_BNGetFunctionComment func
   peekCString cStr
-
-foreign import ccall "BNSetFunctionComment"
-  c_BNSetFunctionComment :: BNFunctionPtr -> CString -> IO ()
-
-foreign import ccall "BNGetFunctionArchitecture"
-  c_BNGetFunctionArchitecture :: BNFunctionPtr -> BNArchPtr
 
 architecture :: BNFunctionPtr -> BNArchPtr
 architecture = c_BNGetFunctionArchitecture
@@ -108,9 +70,6 @@ setComment :: BNFunctionPtr -> String -> IO ()
 setComment func comment = do
   cStr <- newCString comment
   c_BNSetFunctionComment func cStr
-
-foreign import ccall unsafe "BNGetFunctionLowLevelIL"
-  c_BNGetFunctionLowLevelIL :: BNFunctionPtr -> IO BNLlilFunctionPtr
 
 llil :: BNFunctionPtr -> IO BNLlilFunctionPtr
 llil func = do
@@ -121,12 +80,6 @@ llil func = do
       if llilFuncPtr == nullPtr
         then error "llil: c_BNGetFunctionLowLevelIL returned nullPtr"
         else return llilFuncPtr
-
-foreign import ccall unsafe "BNGetFunctionMediumLevelIL"
-  c_BNGetFunctionMediumLevelIL :: BNFunctionPtr -> IO BNMlilFunctionPtr
-
-foreign import ccall unsafe "BNGetMediumLevelILSSAForm"
-  c_BNGetMediumLevelILSSAForm :: BNMlilFunctionPtr -> IO BNMlilSSAFunctionPtr
 
 mlil :: BNFunctionPtr -> IO BNMlilFunctionPtr
 mlil func = do
@@ -149,9 +102,6 @@ mlilSSA :: BNFunctionPtr -> IO BNMlilSSAFunctionPtr
 mlilSSA func = do
   mlilFunc <- mlil func
   c_BNGetMediumLevelILSSAForm mlilFunc
-
-foreign import ccall unsafe "BNGetMediumLevelILOwnerFunction"
-  c_BNGetMediumLevelILOwnerFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
 
 mlilToRawFunction :: BNMlilSSAFunctionPtr -> IO BNFunctionPtr
 mlilToRawFunction func = do

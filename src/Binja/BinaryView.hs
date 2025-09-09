@@ -1,5 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 module Binja.BinaryView
   ( load,
     save,
@@ -18,6 +16,7 @@ module Binja.BinaryView
   )
 where
 
+import Binja.FFI
 import Binja.Plugin
 import Binja.Symbol
 import Binja.Types
@@ -26,21 +25,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
-
---   BNBinaryView* BNLoadFilename(const char* const filename,
---                                const bool updateAnalysis,
---                                const char* options,
---                                BNProgressFunction progress,
---                                void* progressContext);
---
-foreign import ccall "BNLoadFilename"
-  c_BNLoadFilename ::
-    CString -> -- filename
-    CBool -> -- updateAnalysis flag
-    CString -> -- options (e.g., JSON string)
-    BNProgressFunctionPtr -> -- progress function pointer
-    Ptr () -> -- progress context (can be null)
-    IO BNBinaryViewPtr
 
 -- It accepts a Haskell String for the filename and options and a Bool for updateAnalysis.
 -- Here, we pass nullFunPtr and nullPtr for the progress callback and context.
@@ -70,27 +54,14 @@ load filename options = do
     then error $ "Failed to load binary view on file: " ++ filename
     else return viewPtr'
 
-foreign import ccall "BNHasFunctions"
-  c_BNHasFunctions :: BNBinaryViewPtr -> IO CBool
-
 hasFunctions :: BNBinaryViewPtr -> IO Bool
 hasFunctions = fmap Binja.Utils.toBool . c_BNHasFunctions
-
-foreign import ccall "BNHasSymbols"
-  c_BNHasSymbols :: BNBinaryViewPtr -> CBool
 
 hasSymbols :: BNBinaryViewPtr -> Bool
 hasSymbols = Binja.Utils.toBool . c_BNHasSymbols
 
-foreign import ccall "BNHasDataVariables"
-  c_BNHasDataVariables :: BNBinaryViewPtr -> CBool
-
 hasDataVariables :: BNBinaryViewPtr -> Bool
 hasDataVariables = Binja.Utils.toBool . c_BNHasDataVariables
-
--- bool BNSaveToFilename(BNBinaryView* view, const char* filename)
-foreign import ccall "BNSaveToFilename"
-  c_BNSaveToFilename :: BNBinaryViewPtr -> CString -> IO CBool
 
 -- saves the original binary file to the (filename)
 -- absolute filepath along with any modifications
@@ -100,14 +71,8 @@ save view filename =
     result <- c_BNSaveToFilename view cFilename
     return (Binja.Utils.toBool result)
 
-foreign import ccall "BNUpdateAnalysis"
-  c_BNUpdateAnalysis :: BNBinaryViewPtr -> IO ()
-
 updateAnalysis :: BNBinaryViewPtr -> IO ()
 updateAnalysis = c_BNUpdateAnalysis
-
-foreign import ccall "BNUpdateAnalysisAndWait"
-  c_BNUpdateAnalysisAndWait :: BNBinaryViewPtr -> IO ()
 
 -- updateAnalysisAndWait
 -- starts the analysis process and blocks until it is complete. This method should be
@@ -118,20 +83,8 @@ foreign import ccall "BNUpdateAnalysisAndWait"
 updateAnalysisAndWait :: BNBinaryViewPtr -> IO ()
 updateAnalysisAndWait = c_BNUpdateAnalysisAndWait
 
-foreign import ccall "BNAbortAnalysis"
-  c_BNAbortAnalysis :: BNBinaryViewPtr -> IO ()
-
 abortAnalysis :: BNBinaryViewPtr -> IO ()
 abortAnalysis = c_BNAbortAnalysis
-
-foreign import ccall unsafe "BNGetAnalysisFunctionList"
-  c_BNGetAnalysisFunctionList ::
-    BNBinaryViewPtr ->
-    Ptr CSize ->
-    IO (Ptr BNFunctionPtr)
-
-foreign import ccall unsafe "BNFreeFunctionList"
-  c_BNFreeFunctionList :: Ptr BNFunctionPtr -> CSize -> IO ()
 
 getFunctionList :: BNBinaryViewPtr -> IO FunctionList
 getFunctionList view =
@@ -154,16 +107,6 @@ getFunctionList view =
 functions :: BNBinaryViewPtr -> IO [BNFunctionPtr]
 functions = fmap flList . getFunctionList
 
-foreign import ccall unsafe "BNGetSymbols"
-  c_BNGetSymbols ::
-    BNBinaryViewPtr ->
-    Ptr CSize ->
-    BNNameSpacePtr ->
-    IO (Ptr BNSymbolPtr)
-
-foreign import ccall unsafe "BNFreeSymbolList"
-  c_BNFreeSymbolList :: Ptr BNSymbolPtr -> CSize -> IO ()
-
 symbols :: BNBinaryViewPtr -> IO [Symbol]
 symbols view =
   alloca $ \countPtr -> do
@@ -176,13 +119,6 @@ symbols view =
     arrPtr <- newForeignPtr rawPtr (c_BNFreeSymbolList rawPtr (fromIntegral count))
     mapM Binja.Symbol.create xs
 
-foreign import ccall unsafe "BNGetAnalysisFunctionsContainingAddress"
-  c_BNGetAnalysisFunctionsContainingAddress ::
-    BNBinaryViewPtr ->
-    Word64 ->
-    Ptr CSize ->
-    IO (Ptr BNFunctionPtr)
-
 functionsContaining :: BNBinaryViewPtr -> Word64 -> IO [BNFunctionPtr]
 functionsContaining view addr =
   alloca $ \countPtr -> do
@@ -194,15 +130,6 @@ functionsContaining view addr =
         refs <- peekArray (fromIntegral count) (castPtr arrPtr :: Ptr BNFunctionPtr)
         c_BNFreeFunctionList arrPtr count
         return refs
-
-foreign import ccall unsafe "BNGetStrings"
-  c_BNGetStrings ::
-    BNBinaryViewPtr ->
-    Ptr CSize ->
-    IO (Ptr BNStringRefPtr)
-
-foreign import ccall unsafe "BNFreeStringReferenceList"
-  c_BNFreeStringReferenceList :: Ptr BNStringRefPtr -> IO ()
 
 strings :: BNBinaryViewPtr -> IO [Maybe String]
 strings view =
@@ -241,19 +168,6 @@ decodeByType ty = go
 
     hasPrefix :: [Word8] -> BS.ByteString -> Bool
     hasPrefix pfx bs = BS.pack pfx `BS.isPrefixOf` bs
-
-foreign import ccall unsafe "BNReadViewBuffer"
-  c_BNReadViewBuffer ::
-    BNBinaryViewPtr ->
-    Word64 ->
-    CSize ->
-    IO BNDataBufferPtr
-
-foreign import ccall unsafe "BNFreeDataBuffer"
-  c_BNFreeDataBuffer :: BNDataBufferPtr -> IO ()
-
-foreign import ccall unsafe "BNGetDataBufferContents"
-  c_BNGetDataBufferContents :: BNDataBufferPtr -> IO (Ptr CChar)
 
 read :: BNBinaryViewPtr -> Word64 -> CSize -> IO (Maybe BS.ByteString)
 read view addr len = do
