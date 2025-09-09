@@ -11,6 +11,7 @@ import Binja.FFI
 import Binja.Function
 import Binja.Types
 import Binja.Utils (ptrToMaybe)
+import Data.Maybe (listToMaybe)
 
 sourceFunc :: BNLlilFunctionPtr -> IO (Maybe BNFunctionPtr)
 sourceFunc func = do
@@ -52,11 +53,14 @@ fromRef ref = do
 
 at :: BNBinaryViewPtr -> Word64 -> IO (Maybe BNLowLevelILInstruction)
 at view addr = do
-  rawFunc <- head <$> functionsContaining view addr
-  llilFunc <- Binja.Function.llil rawFunc
-  sIndex <- startIndex llilFunc (Binja.Function.architecture rawFunc) addr
-  case sIndex of
+  rawFunc <- listToMaybe <$> functionsContaining view addr
+  case rawFunc of
     Nothing -> return Nothing
-    Just sIndex' -> do
-      exprIndex <- instIndexToExprIndex llilFunc (fromIntegral sIndex')
-      Just <$> llilByIndex llilFunc exprIndex
+    Just rawFunc' -> do
+      llilFunc <- Binja.Function.llil rawFunc'
+      sIndex <- startIndex llilFunc (Binja.Function.architecture rawFunc') addr
+      case sIndex of
+        Nothing -> return Nothing
+        Just sIndex' -> do
+          exprIndex' <- instIndexToExprIndex llilFunc (fromIntegral sIndex')
+          Just <$> llilByIndex llilFunc exprIndex'
