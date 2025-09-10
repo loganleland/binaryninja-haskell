@@ -123,9 +123,12 @@ main = do
   let options = "{\"analysis.mode\": \"intermediate\", \"analysis.limits.maxFunctionSize\": 0}"
   view <- load filename options
   -- Get function by address
-  singleFunc <- Binja.BinaryView.functionAt view 4295449218
-  singleFuncMlilSSA <- Binja.Function.mlilSSA singleFunc
-  refs' <- Binja.Mlil.callerSites view singleFuncMlilSSA
-  Prelude.print $ show $ length refs'
+  iLFuncs <- Binja.BinaryView.functionsAt view 4295449218
+  case iLFuncs of
+    [] -> Prelude.print "No functions found at 4295449218"
+    (hd:_) -> do
+      singleFuncMlilSSA <- Binja.Function.mlilSSA hd
+      refs' <- Binja.Mlil.callerSites view singleFuncMlilSSA
+      Prelude.print $ show $ length refs'
   shutdown
 ```
