@@ -867,7 +867,19 @@ instance Storable BNMediumLevelILInstruction where
     o3 <- peekByteOff ptr 48 :: IO Word64
     o4 <- peekByteOff ptr 56 :: IO Word64
     addr <- peekByteOff ptr 64 :: IO Word64
-    return (BNMediumLevelILInstruction (toEnum $ fromIntegral op) attr srcOp sz o0 o1 o2 o3 o4 addr)
+    return
+      ( BNMediumLevelILInstruction
+          (toEnum $ fromIntegral op)
+          attr
+          srcOp
+          sz
+          o0
+          o1
+          o2
+          o3
+          o4
+          addr
+      )
   poke ptr (BNMediumLevelILInstruction op attr srcOp sz o0 o1 o2 o3 o4 addr) = do
     pokeByteOff ptr 0 $ fromEnum op
     pokeByteOff ptr 4 attr
